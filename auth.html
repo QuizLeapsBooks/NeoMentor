@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Neo Mentor AI · Sign In &amp; Create Account</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* ================================================
+           CSS CUSTOM PROPERTIES & RESET
+           ================================================ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-deep: #06080f;
+            --bg-card: rgba(14, 18, 28, 0.70);
+            --border-glass: rgba(255, 255, 255, 0.07);
+            --border-glow: rgba(255, 255, 255, 0.12);
+            --neon-blue: #4d8fff;
+            --neon-blue-glow: rgba(77, 143, 255, 0.55);
+            --purple-accent: #b06fff;
+            --purple-glow: rgba(176, 111, 255, 0.5);
+            --text-primary: #f0f4fc;
+            --text-secondary: #b5c0d4;
+            --text-muted: #7b8496;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --shadow-card: 0 25px 55px rgba(0, 0, 0, 0.65);
+            --glass-blur: blur(22px);
+            --transition-smooth: 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+            --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            background: var(--bg-deep);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ================================================
+           ANIMATED BACKGROUND (ORBS + GRID)
+           ================================================ */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: -3;
+            opacity: 0.45;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: infinite;
+            will-change: transform;
+        }
+        .orb-1 {
+            width: 550px;
+            height: 550px;
+            background: rgba(77, 143, 255, 0.20);
+            top: -15%;
+            left: -10%;
+            animation: orbFloat1 16s infinite alternate;
+        }
+        .orb-2 {
+            width: 450px;
+            height: 450px;
+            background: rgba(176, 111, 255, 0.18);
+            bottom: -15%;
+            right: -8%;
+            animation: orbFloat2 18s infinite alternate;
+        }
+        .orb-3 {
+            width: 320px;
+            height: 320px;
+            background: rgba(77, 143, 255, 0.13);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: orbFloat3 20s infinite alternate;
+        }
+
+        @keyframes orbFloat1 {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                transform: translate(70px, 80px) scale(1.2);
+            }
+        }
+        @keyframes orbFloat2 {
+            0% {
+                transform: translate(0, 0) scale(1.1);
+            }
+            100% {
+                transform: translate(-60px, -70px) scale(0.85);
+            }
+        }
+        @keyframes orbFloat3 {
+            0% {
+                transform: translate(-50%, -50%) translate(-20px, 20px) scale(1);
+            }
+            100% {
+                transform: translate(-50%, -50%) translate(30px, -30px) scale(1.25);
+            }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.6;
+        }
+
+        /* ================================================
+           MAIN CARD
+           ================================================ */
+        .auth-wrapper {
+            width: 100%;
+            max-width: 480px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-glass);
+            border-radius: 2.8rem;
+            padding: 2.8rem 2.4rem 2.6rem;
+            box-shadow: var(--shadow-card), 0 0 70px rgba(77, 143, 255, 0.06);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 2.8rem;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.08) 50%, transparent 70%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* glow ring */
+        .auth-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 20%, rgba(77, 143, 255, 0.06), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ================================================
+           LOGO
+           ================================================ */
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.7rem;
+            letter-spacing: -0.5px;
+            color: #fff;
+            text-decoration: none;
+            margin-bottom: 0.2rem;
+            position: relative;
+            z-index: 1;
+        }
+        .auth-logo i {
+            color: var(--neon-blue);
+            filter: drop-shadow(0 0 14px var(--neon-blue-glow));
+            font-size: 2.1rem;
+            transition: transform 0.5s;
+        }
+        .auth-logo:hover i {
+            transform: rotate(8deg) scale(1.1);
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: -0.2rem;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ================================================
+           TAB SWITCHER
+           ================================================ */
+        .tab-switcher {
+            display: flex;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 3rem;
+            padding: 0.3rem;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 0.6rem 0.2rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 3rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            letter-spacing: 0.2px;
+        }
+        .tab-btn.active {
+            background: rgba(77, 143, 255, 0.18);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(77, 143, 255, 0.12);
+        }
+        .tab-btn:hover:not(.active) {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ================================================
+           FORMS
+           ================================================ */
+        .auth-form {
+            display: none;
+            flex-direction: column;
+            gap: 1.1rem;
+            position: relative;
+            z-index: 1;
+        }
+        .auth-form.active {
+            display: flex;
+            animation: formFade 0.45s ease forwards;
+        }
+
+        @keyframes formFade {
+            0% {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+        .form-group .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border-radius: 1.4rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: var(--transition-smooth);
+            overflow: hidden;
+        }
+        .form-group .input-wrap:focus-within {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 0 3px rgba(77, 143, 255, 0.15), 0 0 25px rgba(77, 143, 255, 0.04);
+            background: rgba(255, 255, 255, 0.07);
+        }
+        .form-group .input-wrap i {
+            padding: 0 0 0 1.1rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+            min-width: 2.2rem;
+        }
+        .form-group .input-wrap:focus-within i {
+            color: var(--neon-blue);
+        }
+        .form-group .input-wrap input {
+            width: 100%;
+            padding: 0.85rem 1.1rem 0.85rem 0.2rem;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+        .form-group .input-wrap input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.9rem;
+        }
+        .form-group .input-wrap input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 30px rgba(14, 18, 28, 0.9) inset !important;
+            -webkit-text-fill-color: #fff !important;
+        }
+
+        .password-toggle {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding-right: 1rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+        }
+        .password-toggle:hover {
+            color: var(--text-primary);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 0.2rem 0.2rem 0.4rem;
+        }
+        .form-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .form-options label input[type="checkbox"] {
+            accent-color: var(--neon-blue);
+            width: 1rem;
+            height: 1rem;
+            cursor: pointer;
+        }
+        .form-options a {
+            color: var(--neon-blue);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition-smooth);
+        }
+        .form-options a:hover {
+            color: var(--purple-accent);
+            text-decoration: underline;
+        }
+
+        /* ================================================
+           BUTTONS
+           ================================================ */
+        .btn {
+            padding: 0.8rem 1.8rem;
+            border-radius: 3rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-primary);
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn:active {
+            transform: scale(0.94);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-blue), #6c5ce7);
+            border: none;
+            color: #fff;
+            box-shadow: 0 8px 24px -6px var(--neon-blue-glow);
+            animation: btnGlowPulse 2.8s infinite;
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 1rem;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 16px 38px -6px var(--purple-glow);
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #5b9aff, #8b5cf6);
+        }
+
+        @keyframes btnGlowPulse {
+            0%,
+            100% {
+                box-shadow: 0 8px 24px -6px var(--neon-blue-glow);
+            }
+            50% {
+                box-shadow: 0 14px 36px -4px var(--purple-glow);
+            }
+        }
+
+        .btn .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(0);
+            animation: rippleAnim 0.6s linear;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        .btn-outline {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(6px);
+            width: 100%;
+        }
+        .btn-outline:hover {
+            border-color: var(--neon-blue);
+            background: rgba(77, 143, 255, 0.08);
+            color: #fff;
+            box-shadow: 0 0 22px var(--neon-blue-glow);
+            transform: translateY(-2px);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin: 0.2rem 0 0.2rem;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .social-row {
+            display: flex;
+            gap: 0.8rem;
+        }
+        .social-row .btn-social {
+            flex: 1;
+            padding: 0.7rem;
+            border-radius: 1.4rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            font-family: 'Inter', sans-serif;
+        }
+        .social-row .btn-social:hover {
+            border-color: var(--neon-blue);
+            background: rgba(77, 143, 255, 0.06);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        .social-row .btn-social i {
+            font-size: 1.2rem;
+        }
+
+        .auth-footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.8rem;
+            position: relative;
+            z-index: 1;
+        }
+        .auth-footer a {
+            color: var(--neon-blue);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition-smooth);
+        }
+        .auth-footer a:hover {
+            color: var(--purple-accent);
+            text-decoration: underline;
+        }
+
+        /* ================================================
+           BACK TO HOME
+           ================================================ */
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: var(--transition-smooth);
+            margin-top: 1.2rem;
+            padding: 0.4rem 1rem;
+            border-radius: 3rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+            z-index: 1;
+        }
+        .back-home:hover {
+            color: #fff;
+            border-color: var(--neon-blue);
+            background: rgba(77, 143, 255, 0.06);
+            box-shadow: 0 0 20px rgba(77, 143, 255, 0.06);
+            transform: translateX(-3px);
+        }
+        .back-home i {
+            font-size: 0.9rem;
+            transition: transform 0.3s;
+        }
+        .back-home:hover i {
+            transform: translateX(-4px);
+        }
+
+        /* ================================================
+           MESSAGE / TOAST
+           ================================================ */
+        .form-message {
+            padding: 0.7rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .form-message.error {
+            display: flex;
+            background: rgba(255, 70, 70, 0.12);
+            border: 1px solid rgba(255, 70, 70, 0.2);
+            color: #ff8a8a;
+        }
+        .form-message.success {
+            display: flex;
+            background: rgba(70, 255, 140, 0.08);
+            border: 1px solid rgba(70, 255, 140, 0.15);
+            color: #7affa0;
+        }
+        .form-message i {
+            font-size: 1rem;
+        }
+
+        /* ================================================
+           RESPONSIVE
+           ================================================ */
+        @media (max-width: 540px) {
+            body {
+                padding: 1rem;
+            }
+            .auth-card {
+                padding: 2rem 1.4rem 1.8rem;
+                border-radius: 2.2rem;
+            }
+            .auth-logo {
+                font-size: 1.4rem;
+            }
+            .auth-logo i {
+                font-size: 1.7rem;
+            }
+            .tab-btn {
+                font-size: 0.8rem;
+                padding: 0.5rem 0.2rem;
+            }
+            .form-group .input-wrap input {
+                font-size: 0.9rem;
+                padding: 0.75rem 0.8rem 0.75rem 0.2rem;
+            }
+            .form-group .input-wrap i {
+                padding-left: 0.8rem;
+                font-size: 0.85rem;
+                min-width: 1.8rem;
+            }
+            .social-row .btn-social {
+                font-size: 0.9rem;
+                padding: 0.6rem;
+            }
+            .social-row .btn-social span {
+                display: none;
+            }
+            .back-home {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.8rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .auth-card {
+                padding: 1.6rem 1rem 1.4rem;
+            }
+            .form-options {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================================================
+    ANIMATED BACKGROUND
+    ================================================ -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- ================================================
+    AUTH WRAPPER
+    ================================================ -->
+    <div class="auth-wrapper">
+
+        <div class="auth-card">
+
+            <!-- Logo -->
+            <a href="index.html" class="auth-logo">
+                <i class="fas fa-brain"></i> Neo Mentor AI
+            </a>
+            <p class="auth-subtitle">Your personal AI study companion</p>
+
+            <!-- Tab Switcher -->
+            <div class="tab-switcher" role="tablist">
+                <button class="tab-btn active" data-tab="login" role="tab" aria-selected="true">Sign In</button>
+                <button class="tab-btn" data-tab="register" role="tab" aria-selected="false">Create Account</button>
+            </div>
+
+            <!-- ==========================================
+            LOGIN FORM
+            ========================================== -->
+            <form class="auth-form active" id="loginForm" autocomplete="off" novalidate>
+                <div class="form-message" id="loginMessage"></div>
+
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="loginEmail" placeholder="you@example.com" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="••••••••" required />
+                        <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label><input type="checkbox" checked /> Remember me</label>
+                    <a href="#">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-arrow-right-to-bracket"></i> Sign In
+                </button>
+
+                <div class="divider">or continue with</div>
+
+                <div class="social-row">
+                    <button type="button" class="btn-social"><i class="fab fa-google"></i><span>Google</span></button>
+                    <button type="button" class="btn-social"><i class="fab fa-github"></i><span>GitHub</span></button>
+                </div>
+
+                <div class="auth-footer">
+                    Don't have an account? <a href="#" id="switchToRegister">Create one</a>
+                </div>
+            </form>
+
+            <!-- ==========================================
+            REGISTER FORM
+            ========================================== -->
+            <form class="auth-form" id="registerForm" autocomplete="off" novalidate>
+                <div class="form-message" id="registerMessage"></div>
+
+                <div class="form-group">
+                    <label for="regName">Full name</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="regName" placeholder="Alex Rivera" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail">Email</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="regEmail" placeholder="you@example.com" required />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="regPassword" placeholder="Min. 8 characters" required minlength="8" />
+                        <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regConfirm">Confirm password</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-check-circle"></i>
+                        <input type="password" id="regConfirm" placeholder="Confirm your password" required />
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label><input type="checkbox" required /> I agree to the <a href="#" style="color:var(--neon-blue);text-decoration:none;">Terms</a> &amp; <a href="#" style="color:var(--neon-blue);text-decoration:none;">Privacy Policy</a></label>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+
+                <div class="divider">or continue with</div>
+
+                <div class="social-row">
+                    <button type="button" class="btn-social"><i class="fab fa-google"></i><span>Google</span></button>
+                    <button type="button" class="btn-social"><i class="fab fa-github"></i><span>GitHub</span></button>
+                </div>
+
+                <div class="auth-footer">
+                    Already have an account? <a href="#" id="switchToLogin">Sign in</a>
+                </div>
+            </form>
+
+        </div>
+
+        <!-- Back to Home -->
+        <div style="display:flex;justify-content:center;">
+            <a href="index.html" class="back-home">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+        </div>
+
+    </div>
+
+    <!-- ================================================
+    JAVASCRIPT
+    ================================================ -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+        (function() {
+            'use strict';
+
+            // ──────────────────────────────────────────────
+            // FIREBASE SETUP
+            // ──────────────────────────────────────────────
+            const firebaseConfig = {
+                apiKey: "AIzaSyA1iWJdGtmrox9RAHgWBxaK4p8KGf7ji_Y",
+                authDomain: "neobranium.firebaseapp.com",
+                databaseURL: "https://neobranium-default-rtdb.firebaseio.com",
+                projectId: "neobranium",
+                storageBucket: "neobranium.firebasestorage.app",
+                messagingSenderId: "59188872045",
+                appId: "1:59188872045:web:450a70b28e4be5db335064"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const database = firebase.database();
+            const firestore = firebase.firestore();
+
+            // keep sessions alive across reloads
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+
+            // ──────────────────────────────────────────────
+            // DOM REFS
+            // ──────────────────────────────────────────────
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginMsg = document.getElementById('loginMessage');
+            const registerMsg = document.getElementById('registerMessage');
+            const switchToRegister = document.getElementById('switchToRegister');
+            const switchToLogin = document.getElementById('switchToLogin');
+
+            // ──────────────────────────────────────────────
+            // TAB SWITCHING
+            // ──────────────────────────────────────────────
+            function setActiveTab(tabId) {
+                // update buttons
+                tabBtns.forEach(btn => {
+                    const isActive = btn.dataset.tab === tabId;
+                    btn.classList.toggle('active', isActive);
+                    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+
+                // update forms
+                loginForm.classList.toggle('active', tabId === 'login');
+                registerForm.classList.toggle('active', tabId === 'register');
+
+                // clear messages
+                loginMsg.className = 'form-message';
+                loginMsg.style.display = 'none';
+                registerMsg.className = 'form-message';
+                registerMsg.style.display = 'none';
+            }
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    setActiveTab(this.dataset.tab);
+                });
+            });
+
+            switchToRegister.addEventListener('click', function(e) {
+                e.preventDefault();
+                setActiveTab('register');
+            });
+
+            switchToLogin.addEventListener('click', function(e) {
+                e.preventDefault();
+                setActiveTab('login');
+            });
+
+            // ──────────────────────────────────────────────
+            // PASSWORD TOGGLE
+            // ──────────────────────────────────────────────
+            document.querySelectorAll('.password-toggle').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const input = this.closest('.input-wrap').querySelector('input');
+                    const icon = this.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.replace('fa-eye', 'fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.replace('fa-eye-slash', 'fa-eye');
+                    }
+                });
+            });
+
+            // ──────────────────────────────────────────────
+            // SHOW MESSAGE HELPER
+            // ──────────────────────────────────────────────
+            function showMessage(element, message, type = 'error') {
+                element.textContent = message;
+                element.className = 'form-message ' + type;
+                element.style.display = 'flex';
+                // auto-hide after 5s
+                clearTimeout(element._hideTimer);
+                element._hideTimer = setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+
+            function setLoading(form, isLoading) {
+                const button = form.querySelector('button[type="submit"]');
+                if (!button) return;
+                if (!button.dataset.defaultText) {
+                    button.dataset.defaultText = button.innerHTML;
+                }
+                button.disabled = isLoading;
+                button.innerHTML = isLoading
+                    ? '<i class="fas fa-spinner fa-spin"></i> Processing...'
+                    : button.dataset.defaultText;
+            }
+
+            async function saveUserProfile(user, name) {
+                const payload = {
+                    uid: user.uid,
+                    name: name || user.displayName || 'Neo Mentor User',
+                    email: user.email,
+                    photoURL: user.photoURL || '',
+                    provider: user.providerData?.[0]?.providerId || 'password',
+                    createdAt: firebase.database.ServerValue.TIMESTAMP,
+                    lastLoginAt: firebase.database.ServerValue.TIMESTAMP,
+                    website: 'NeoMentor Auth'
+                };
+
+                const userPath = `neomentorApp/users/${user.uid}`;
+                const docRef = firestore.collection('neomentorAppUsers').doc(user.uid);
+
+                await Promise.all([
+                    database.ref(userPath).update(payload),
+                    docRef.set({ ...payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
+                ]);
+            }
+
+            function redirectToDashboard() {
+                window.location.href = 'html/dashboard.html';
+            }
+
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    redirectToDashboard();
+                }
+            });
+
+            // ──────────────────────────────────────────────
+            // LOGIN HANDLER
+            // ──────────────────────────────────────────────
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
+
+                if (!email || !password) {
+                    showMessage(loginMsg, '⚠️ Please fill in all fields.', 'error');
+                    return;
+                }
+
+                if (!email.includes('@') || !email.includes('.')) {
+                    showMessage(loginMsg, '⚠️ Please enter a valid email address.', 'error');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showMessage(loginMsg, '⚠️ Password must be at least 6 characters.', 'error');
+                    return;
+                }
+
+                try {
+                    setLoading(loginForm, true);
+                    const cred = await auth.signInWithEmailAndPassword(email, password);
+                    await saveUserProfile(cred.user, cred.user.displayName || 'Neo Mentor User');
+                    showMessage(loginMsg, '✅ Welcome back! Redirecting to dashboard…', 'success');
+                    setTimeout(redirectToDashboard, 1200);
+                } catch (error) {
+                    const message = error.code === 'auth/invalid-credential'
+                        ? '⚠️ Invalid email or password.'
+                        : '⚠️ ' + (error.message || 'Login failed.');
+                    showMessage(loginMsg, message, 'error');
+                } finally {
+                    setLoading(loginForm, false);
+                }
+            });
+
+            // ──────────────────────────────────────────────
+            // REGISTER HANDLER
+            // ──────────────────────────────────────────────
+            registerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('regName').value.trim();
+                const email = document.getElementById('regEmail').value.trim();
+                const password = document.getElementById('regPassword').value.trim();
+                const confirm = document.getElementById('regConfirm').value.trim();
+                const terms = document.querySelector('#registerForm input[type="checkbox"]');
+
+                if (!name || !email || !password || !confirm) {
+                    showMessage(registerMsg, '⚠️ Please fill in all fields.', 'error');
+                    return;
+                }
+
+                if (name.length < 2) {
+                    showMessage(registerMsg, '⚠️ Please enter your full name.', 'error');
+                    return;
+                }
+
+                if (!email.includes('@') || !email.includes('.')) {
+                    showMessage(registerMsg, '⚠️ Please enter a valid email address.', 'error');
+                    return;
+                }
+
+                if (password.length < 8) {
+                    showMessage(registerMsg, '⚠️ Password must be at least 8 characters.', 'error');
+                    return;
+                }
+
+                if (password !== confirm) {
+                    showMessage(registerMsg, '⚠️ Passwords do not match.', 'error');
+                    return;
+                }
+
+                if (!terms.checked) {
+                    showMessage(registerMsg, '⚠️ You must agree to the Terms & Privacy Policy.', 'error');
+                    return;
+                }
+
+                try {
+                    setLoading(registerForm, true);
+                    const cred = await auth.createUserWithEmailAndPassword(email, password);
+                    if (cred.user) {
+                        await cred.user.updateProfile({ displayName: name });
+                        await saveUserProfile(cred.user, name);
+                    }
+                    showMessage(registerMsg, '✅ Account created! Redirecting to dashboard…', 'success');
+                    setTimeout(redirectToDashboard, 1200);
+                } catch (error) {
+                    const message = error.code === 'auth/email-already-in-use'
+                        ? '⚠️ This email is already registered.'
+                        : '⚠️ ' + (error.message || 'Registration failed.');
+                    showMessage(registerMsg, message, 'error');
+                } finally {
+                    setLoading(registerForm, false);
+                }
+            });
+
+            // ──────────────────────────────────────────────
+            // SOCIAL BUTTONS (placeholder)
+            // ──────────────────────────────────────────────
+            document.querySelectorAll('.btn-social').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const provider = this.textContent.trim() || 'Social';
+                    alert(`🔐 ${provider} authentication (MVP placeholder)\n\nThis would connect to ${provider} OAuth in production.`);
+                });
+            });
+
+            // ──────────────────────────────────────────────
+            // FORGOT PASSWORD (placeholder)
+            // ──────────────────────────────────────────────
+            document.querySelector('.form-options a[href="#"]')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('📧 Password reset link would be sent to your email.\n\n(MVP placeholder)');
+            });
+
+            // ──────────────────────────────────────────────
+            // BUTTON RIPPLE EFFECT
+            // ──────────────────────────────────────────────
+            document.querySelectorAll('.btn, .btn-social').forEach(el => {
+                el.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const ripple = document.createElement('span');
+                    ripple.classList.add('ripple');
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                    this.appendChild(ripple);
+                    ripple.addEventListener('animationend', () => ripple.remove());
+                });
+            });
+
+            // ──────────────────────────────────────────────
+            // KEYBOARD SHORTCUT: Escape → blur inputs
+            // ──────────────────────────────────────────────
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.activeElement?.blur();
+                }
+            });
+
+            console.log('🔐 Neo Mentor AI — auth.html ready (MVP)');
+        })();
+    </script>
+
+</body>
+</html>

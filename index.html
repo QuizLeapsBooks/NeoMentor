@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Neo Mentor AI | Your Personal AI Study Mentor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ================================================
+       CSS CUSTOM PROPERTIES & RESET
+       ================================================ */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-deep: #06080f;
+      --bg-card: rgba(14, 18, 28, 0.65);
+      --border-glass: rgba(255, 255, 255, 0.07);
+      --border-glow: rgba(255, 255, 255, 0.12);
+      --neon-blue: #4d8fff;
+      --neon-blue-glow: rgba(77, 143, 255, 0.55);
+      --purple-accent: #b06fff;
+      --purple-glow: rgba(176, 111, 255, 0.5);
+      --text-primary: #f0f4fc;
+      --text-secondary: #b5c0d4;
+      --text-muted: #7b8496;
+      --shadow-card: 0 20px 45px rgba(0, 0, 0, 0.55);
+      --glass-blur: blur(18px);
+      --transition-smooth: 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+      --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      background: var(--bg-deep);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      cursor: default;
+      position: relative;
+    }
+
+    /* ================================================
+       CUSTOM CURSOR GLOW
+       ================================================ */
+    .cursor-glow {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center,
+          rgba(77, 143, 255, 0.12) 0%,
+          rgba(176, 111, 255, 0.05) 35%,
+          transparent 70%);
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s;
+      will-change: left, top;
+      opacity: 0.85;
+    }
+
+    @media (max-width: 768px) {
+      .cursor-glow {
+        display: none;
+      }
+    }
+
+    /* ================================================
+       LOADING SCREEN
+       ================================================ */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      background: #06080f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #loading-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      animation: loaderPulse 1.6s ease-in-out infinite;
+      letter-spacing: -1px;
+    }
+
+    .loader-logo i {
+      color: var(--neon-blue);
+      filter: drop-shadow(0 0 14px var(--neon-blue-glow));
+      font-size: 2.8rem;
+      animation: loaderSpin 2.5s linear infinite;
+    }
+
+    .loader-bar-track {
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      margin-top: 2rem;
+      overflow: hidden;
+    }
+
+    .loader-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--neon-blue), var(--purple-accent));
+      border-radius: 10px;
+      animation: loadProgress 2s ease-in-out forwards;
+    }
+
+    @keyframes loaderPulse {
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.7;
+        transform: scale(1.04);
+      }
+    }
+
+    @keyframes loaderSpin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes loadProgress {
+      0% {
+        width: 0%;
+      }
+      40% {
+        width: 55%;
+      }
+      80% {
+        width: 90%;
+      }
+      100% {
+        width: 100%;
+      }
+    }
+
+    /* ================================================
+       ANIMATED BACKGROUND (PARTICLES + ORBS + GRID)
+       ================================================ */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      opacity: 0.75;
+    }
+
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: -3;
+      opacity: 0.5;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      will-change: transform;
+    }
+
+    .orb-1 {
+      width: 500px;
+      height: 500px;
+      background: rgba(77, 143, 255, 0.22);
+      top: -10%;
+      left: -8%;
+      animation: orbFloat1 14s infinite alternate;
+    }
+
+    .orb-2 {
+      width: 420px;
+      height: 420px;
+      background: rgba(176, 111, 255, 0.2);
+      bottom: -12%;
+      right: -6%;
+      animation: orbFloat2 16s infinite alternate;
+    }
+
+    .orb-3 {
+      width: 350px;
+      height: 350px;
+      background: rgba(77, 143, 255, 0.15);
+      top: 55%;
+      left: 50%;
+      animation: orbFloat3 18s infinite alternate;
+    }
+
+    @keyframes orbFloat1 {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        transform: translate(60px, 70px) scale(1.15);
+      }
+    }
+    @keyframes orbFloat2 {
+      0% {
+        transform: translate(0, 0) scale(1.1);
+      }
+      100% {
+        transform: translate(-50px, -60px) scale(0.9);
+      }
+    }
+    @keyframes orbFloat3 {
+      0% {
+        transform: translate(-30px, 20px) scale(1);
+      }
+      100% {
+        transform: translate(40px, -30px) scale(1.2);
+      }
+    }
+
+    /* Grid overlay */
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 55px 55px;
+      opacity: 0.5;
+    }
+
+    /* ================================================
+       MAIN CONTAINER
+       ================================================ */
+    .container {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ================================================
+       NAVBAR
+       ================================================ */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8, 10, 18, 0.72);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--border-glass);
+      padding: 0.9rem 0;
+      transition: var(--transition-smooth);
+    }
+
+    .navbar.scrolled {
+      background: rgba(6, 8, 15, 0.85);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.55rem;
+      letter-spacing: -0.5px;
+      color: #fff;
+      transition: var(--transition-bounce);
+      text-decoration: none;
+    }
+    .logo:hover {
+      transform: scale(1.04);
+    }
+    .logo i {
+      color: var(--neon-blue);
+      filter: drop-shadow(0 0 10px var(--neon-blue-glow));
+      font-size: 2rem;
+      transition: transform 0.5s;
+    }
+    .logo:hover i {
+      transform: rotate(8deg) scale(1.1);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.3rem;
+      align-items: center;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      transition: color 0.25s, transform 0.25s;
+      font-size: 0.95rem;
+      position: relative;
+      padding: 0.2rem 0;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--neon-blue);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover {
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 0.9rem;
+      align-items: center;
+    }
+
+    /* ================================================
+       BUTTONS
+       ================================================ */
+    .btn {
+      padding: 0.6rem 1.6rem;
+      border-radius: 3rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition-bounce);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-primary);
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .btn:active {
+      transform: scale(0.94);
+    }
+
+    .btn-outline {
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(6px);
+    }
+    .btn-outline:hover {
+      border-color: var(--neon-blue);
+      background: rgba(77, 143, 255, 0.1);
+      color: #fff;
+      box-shadow: 0 0 22px var(--neon-blue-glow);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--neon-blue), #6c5ce7);
+      border: none;
+      color: #fff;
+      box-shadow: 0 8px 22px -6px var(--neon-blue-glow);
+      animation: btnGlowPulse 2.8s infinite;
+    }
+    .btn-primary:hover {
+      box-shadow: 0 16px 32px -6px var(--purple-glow);
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #5b9aff, #8b5cf6);
+    }
+    .btn-lg {
+      padding: 0.85rem 2.3rem;
+      font-size: 1rem;
+    }
+
+    @keyframes btnGlowPulse {
+      0%,
+      100% {
+        box-shadow: 0 8px 22px -6px var(--neon-blue-glow);
+      }
+      50% {
+        box-shadow: 0 14px 34px -4px var(--purple-glow);
+      }
+    }
+
+    /* Ripple effect */
+    .btn .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(0);
+      animation: rippleAnim 0.6s linear;
+      pointer-events: none;
+    }
+    @keyframes rippleAnim {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* ================================================
+       HERO SECTION
+       ================================================ */
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3.5rem;
+      padding: 5rem 0 6rem;
+      flex-wrap: wrap;
+      position: relative;
+    }
+    .hero-content {
+      flex: 1 1 420px;
+    }
+    .hero-content h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.8rem, 5.5vw, 3.8rem);
+      font-weight: 700;
+      line-height: 1.15;
+      background: linear-gradient(135deg, #ffffff 0%, #c0d0f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1.5rem;
+      letter-spacing: -1px;
+    }
+    .hero-content h1 .typing-wrapper {
+      display: inline-block;
+      border-right: 3px solid var(--neon-blue);
+      white-space: nowrap;
+      overflow: hidden;
+      animation: typingAnim 3s steps(30, end) forwards, blinkCaret 0.9s step-end 3s infinite;
+      max-width: 100%;
+    }
+    @keyframes typingAnim {
+      from {
+        width: 0;
+      }
+      to {
+        width: 100%;
+      }
+    }
+    @keyframes blinkCaret {
+      from,
+      to {
+        border-color: transparent;
+      }
+      50% {
+        border-color: var(--neon-blue);
+      }
+    }
+    .hero-content p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      max-width: 520px;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+    }
+
+    .dashboard-mockup {
+      flex: 1 1 460px;
+      background: rgba(16, 20, 32, 0.55);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-glass);
+      border-radius: 2.5rem;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-card), 0 0 55px rgba(77, 143, 255, 0.1);
+      animation: floatMockup 5.5s ease-in-out infinite;
+    }
+    @keyframes floatMockup {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+    .mockup-inner {
+      background: rgba(10, 14, 24, 0.7);
+      border-radius: 1.8rem;
+      padding: 1.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .mockup-header {
+      display: flex;
+      justify-content: space-between;
+      color: #a0b0cc;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+    .mockup-stats {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.4rem;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 1rem;
+      padding: 0.7rem 1rem;
+      flex: 1;
+      transition: var(--transition-smooth);
+    }
+    .stat-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px);
+    }
+    .progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--neon-blue);
+      border-radius: 10px;
+      transition: width 2s ease;
+    }
+    .chat-mock {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 1rem;
+      padding: 0.8rem;
+      margin-top: 1rem;
+    }
+    .message {
+      display: flex;
+      gap: 0.5rem;
+      margin: 0.8rem 0;
+      transition: transform 0.2s;
+    }
+    .message:hover {
+      transform: translateX(5px);
+    }
+    .ai-bubble {
+      background: rgba(176, 111, 255, 0.2);
+      padding: 0.4rem 0.9rem;
+      border-radius: 1rem 1rem 1rem 0.2rem;
+    }
+
+    /* ================================================
+       SECTION TITLES
+       ================================================ */
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 2.8rem;
+      text-align: center;
+      letter-spacing: -0.5px;
+    }
+    .section-title span {
+      background: linear-gradient(135deg, var(--neon-blue), var(--purple-accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ================================================
+       SCROLL ANIMATIONS (Intersection Observer)
+       ================================================ */
+    .reveal {
+      opacity: 0;
+      transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.15, 0.85, 0.35, 1);
+      will-change: opacity, transform;
+    }
+    .reveal.fade-up {
+      transform: translateY(45px);
+    }
+    .reveal.fade-left {
+      transform: translateX(-40px);
+    }
+    .reveal.fade-right {
+      transform: translateX(40px);
+    }
+    .reveal.scale-in {
+      transform: scale(0.88);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translate(0) scale(1);
+    }
+
+    /* ================================================
+       FEATURES GRID
+       ================================================ */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1.8rem;
+      margin: 3rem 0 5rem;
+    }
+    .feature-item {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-glass);
+      border-radius: 2rem;
+      padding: 2rem 1.2rem;
+      text-align: center;
+      transition: var(--transition-bounce);
+      position: relative;
+    }
+    .feature-item::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 2rem;
+      padding: 1px;
+      background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .feature-item:hover::before {
+      opacity: 1;
+    }
+    .feature-item:hover {
+      transform: translateY(-10px) scale(1.03);
+      border-color: var(--neon-blue);
+      box-shadow: 0 24px 40px -14px rgba(77, 143, 255, 0.25);
+    }
+    .feature-item i {
+      font-size: 2.4rem;
+      color: var(--neon-blue);
+      margin-bottom: 1rem;
+      transition: var(--transition-bounce);
+      display: inline-block;
+    }
+    .feature-item:hover i {
+      transform: scale(1.3) rotate(-5deg);
+      color: var(--purple-accent);
+      filter: drop-shadow(0 0 10px var(--purple-glow));
+    }
+    .feature-item h4 {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    /* ================================================
+       STATS COUNTER SECTION
+       ================================================ */
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5rem;
+      justify-content: center;
+      margin: 4rem 0;
+      text-align: center;
+    }
+    .stat-counter {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 2rem;
+      padding: 2rem 2.5rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-glass);
+      transition: var(--transition-smooth);
+    }
+    .stat-counter:hover {
+      border-color: var(--purple-accent);
+      box-shadow: 0 0 35px rgba(176, 111, 255, 0.15);
+    }
+    .stat-number {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, var(--neon-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ================================================
+       ROADMAP
+       ================================================ */
+    .roadmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 1.6rem;
+      margin-top: 2rem;
+    }
+    .coming-soon-card {
+      background: rgba(22, 26, 38, 0.7);
+      backdrop-filter: blur(14px);
+      border: 1px dashed rgba(176, 111, 255, 0.45);
+      border-radius: 1.8rem;
+      padding: 2rem 1.2rem;
+      text-align: center;
+      transition: var(--transition-bounce);
+      opacity: 0.85;
+    }
+    .coming-soon-card:hover {
+      opacity: 1;
+      border: 1px solid var(--purple-accent);
+      transform: translateY(-8px);
+      box-shadow: 0 18px 35px rgba(176, 111, 255, 0.2);
+      background: rgba(35, 28, 55, 0.8);
+    }
+    .badge {
+      background: var(--purple-accent);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.3rem 0.9rem;
+      border-radius: 2rem;
+      display: inline-block;
+      margin-top: 0.9rem;
+      letter-spacing: 0.4px;
+    }
+
+    /* ================================================
+       FAQ ACCORDION
+       ================================================ */
+    .faq-list {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .faq-item {
+      background: rgba(255, 255, 255, 0.02);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border-glass);
+      border-radius: 1.3rem;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      transition: var(--transition-smooth);
+    }
+    .faq-question {
+      padding: 1.3rem 1.8rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      user-select: none;
+    }
+    .faq-question i {
+      transition: transform 0.4s ease;
+      color: var(--neon-blue);
+    }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s;
+      padding: 0 1.8rem;
+      color: var(--text-secondary);
+    }
+    .faq-item.open .faq-answer {
+      max-height: 200px;
+      padding: 0 1.8rem 1.3rem;
+    }
+    .faq-item.open .faq-question i {
+      transform: rotate(45deg);
+    }
+
+    /* ================================================
+       CTA SECTION
+       ================================================ */
+    .cta-section {
+      text-align: center;
+      background: linear-gradient(145deg, rgba(77, 143, 255, 0.12), rgba(176, 111, 255, 0.08));
+      border-radius: 3rem;
+      padding: 4rem 2.5rem;
+      margin: 5rem 0;
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+    }
+
+    /* ================================================
+       FOOTER
+       ================================================ */
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 5rem;
+      padding: 2.8rem 0;
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+      align-items: center;
+    }
+    .social-icons i {
+      font-size: 1.5rem;
+      margin-left: 1.2rem;
+      color: var(--text-muted);
+      transition: var(--transition-bounce);
+      cursor: pointer;
+    }
+    .social-icons i:hover {
+      color: var(--neon-blue);
+      transform: translateY(-4px) scale(1.2);
+      filter: drop-shadow(0 0 8px var(--neon-blue-glow));
+    }
+
+    @media (max-width: 768px) {
+      .nav-container {
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+      .hero {
+        flex-direction: column;
+        padding: 3rem 0;
+      }
+      .hero-content h1 {
+        font-size: 2.5rem;
+      }
+      .typing-wrapper {
+        white-space: normal;
+        border-right: none;
+        animation: none;
+      }
+      .footer-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ================================================
+  CUSTOM CURSOR GLOW ELEMENT
+  ================================================ -->
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <!-- ================================================
+  ANIMATED BACKGROUND ORBS
+  ================================================ -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+  <div class="grid-overlay"></div>
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- ================================================
+  LOADING SCREEN
+  ================================================ -->
+  <div id="loading-screen">
+    <div class="loader-logo">
+      <i class="fas fa-brain"></i> Neo Mentor AI
+    </div>
+    <div class="loader-bar-track">
+      <div class="loader-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- ================================================
+  STICKY NAVIGATION
+  ================================================ -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-container">
+      <a href="#" class="logo">
+        <i class="fas fa-brain"></i> Neo Mentor AI
+      </a>
+      <div class="nav-links">
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#about">About</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+      </div>
+      <div class="nav-buttons">
+        <a href="auth.html" class="btn btn-outline signin-btn">Sign In</a>
+        <a href="auth.html" class="btn btn-primary create-account-btn">Create Account</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================================================
+  MAIN CONTENT
+  ================================================ -->
+  <main class="container" id="home">
+
+    <!-- HERO -->
+    <section class="hero reveal fade-up">
+      <div class="hero-content">
+        <h1>
+          <span class="typing-wrapper">Your Personal AI Study Mentor</span>
+        </h1>
+        <p>Stay consistent, organize your study goals and learn smarter with an AI mentor designed for students.</p>
+        <div class="hero-buttons">
+          <a href="#" class="btn btn-primary btn-lg create-account-btn">Create Account</a>
+          <a href="#" class="btn btn-outline btn-lg signin-btn">Sign In</a>
+        </div>
+      </div>
+      <div class="dashboard-mockup reveal fade-right">
+        <div class="mockup-inner">
+          <div class="mockup-header">
+            <span><i class="fas fa-chart-line"></i> Dashboard</span>
+            <span>📅 Today</span>
+          </div>
+          <div class="mockup-stats">
+            <div class="stat-card"><small>Goals</small><div><strong>3/4</strong></div><div class="progress-bar"><div class="progress-fill" style="width:75%"></div></div></div>
+            <div class="stat-card"><small>Focus</small><div><strong>2.4h</strong></div></div>
+          </div>
+          <div class="chat-mock">
+            <div class="message"><i class="fas fa-robot" style="color:var(--purple-accent)"></i><span class="ai-bubble">Ready for Physics? 📘</span></div>
+            <div class="message" style="justify-content:flex-end;"><span style="background:#2d3748;padding:0.4rem 0.9rem;border-radius:1rem 1rem 0.2rem 1rem;">Let's go!</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES (V1 only) -->
+    <section id="features" style="margin:5rem 0;">
+      <h2 class="section-title reveal fade-up">✨ <span>Version 1</span> Features</h2>
+      <div class="features-grid">
+        <div class="feature-item reveal fade-up"><i class="fas fa-comments"></i><h4>AI Study Chat</h4></div>
+        <div class="feature-item reveal fade-up"><i class="fas fa-tachometer-alt"></i><h4>Personal Dashboard</h4></div>
+        <div class="feature-item reveal fade-up"><i class="fas fa-bullseye"></i><h4>Goal Tracking</h4></div>
+        <div class="feature-item reveal fade-up"><i class="fas fa-calendar-check"></i><h4>Daily Study Goals</h4></div>
+        <div class="feature-item reveal fade-up"><i class="fas fa-user-graduate"></i><h4>Student Profile</h4></div>
+        <div class="feature-item reveal fade-up"><i class="fas fa-chart-bar"></i><h4>Progress Overview</h4></div>
+        <div class="feature-item reveal fade-up"><i class="fas fa-mobile-alt"></i><h4>Clean Responsive UI</h4></div>
+      </div>
+    </section>
+
+    <!-- STATS COUNTER -->
+    <section class="stats-row reveal fade-up">
+      <div class="stat-counter">
+        <div class="stat-number" data-target="98">0</div>
+        <div style="color:var(--text-secondary);">Active Students</div>
+      </div>
+      <div class="stat-counter">
+        <div class="stat-number" data-target="4">0</div>
+        <div style="color:var(--text-secondary);">Core Features</div>
+      </div>
+      <div class="stat-counter">
+        <div class="stat-number" data-target="24">0</div>
+        <div style="color:var(--text-secondary);">Daily Goals Tracked</div>
+      </div>
+    </section>
+
+    <!-- ABOUT + HOW IT WORKS -->
+    <section id="about" style="display:flex;gap:3rem;flex-wrap:wrap;margin:5rem 0;background:rgba(255,255,255,0.015);border-radius:2.5rem;padding:2.8rem;backdrop-filter:blur(12px);" class="reveal fade-up">
+      <div style="flex:1;">
+        <h3 style="font-family:'Space Grotesk';font-size:1.9rem;">About Neo Mentor</h3>
+        <p style="color:var(--text-secondary);margin-top:1rem;">Neo Mentor AI helps students create study goals, stay organized and interact with an AI mentor through a simple dashboard. Built for focus, not complexity.</p>
+      </div>
+      <div style="flex:1;">
+        <h3 style="font-family:'Space Grotesk';">How It Works</h3>
+        <div style="display:flex;flex-direction:column;gap:0.9rem;margin-top:1rem;">
+          <div><span style="color:var(--neon-blue);">①</span> Create Account</div>
+          <div><span style="color:var(--neon-blue);">②</span> Complete Profile</div>
+          <div><span style="color:var(--neon-blue);">③</span> Open Dashboard</div>
+          <div><span style="color:var(--neon-blue);">④</span> Start Chatting with your AI Mentor</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section style="margin:5rem 0;">
+      <h2 class="section-title reveal fade-up">🔮 <span>Roadmap</span></h2>
+      <div class="roadmap-grid">
+        <div class="coming-soon-card reveal scale-in"><i class="fas fa-brain" style="font-size:2rem;color:var(--purple-accent);"></i><h4>Long-Term Memory</h4><span class="badge">Coming Soon</span></div>
+        <div class="coming-soon-card reveal scale-in"><i class="fab fa-whatsapp" style="font-size:2rem;color:var(--purple-accent);"></i><h4>WhatsApp Integration</h4><span class="badge">Coming Soon</span></div>
+        <div class="coming-soon-card reveal scale-in"><i class="fas fa-microphone-alt" style="font-size:2rem;color:var(--purple-accent);"></i><h4>Voice Mentor</h4><span class="badge">Coming Soon</span></div>
+        <div class="coming-soon-card reveal scale-in"><i class="fas fa-chart-pie" style="font-size:2rem;color:var(--purple-accent);"></i><h4>Advanced Analytics</h4><span class="badge">Coming Soon</span></div>
+        <div class="coming-soon-card reveal scale-in"><i class="fas fa-building" style="font-size:2rem;color:var(--purple-accent);"></i><h4>Institute Dashboard</h4><span class="badge">Coming Soon</span></div>
+      </div>
+    </section>
+
+    <!-- FAQ ACCORDION -->
+    <section id="faq" style="margin:5rem 0;">
+      <h2 class="section-title reveal fade-up">❓ FAQ</h2>
+      <div class="faq-list">
+        <div class="faq-item reveal fade-up">
+          <div class="faq-question">What is Neo Mentor AI? <i class="fas fa-plus"></i></div>
+          <div class="faq-answer">An AI study companion that helps you set goals and stay consistent via chat.</div>
+        </div>
+        <div class="faq-item reveal fade-up">
+          <div class="faq-question">Is it free? <i class="fas fa-plus"></i></div>
+          <div class="faq-answer">We offer a free tier for early users. Premium plans coming later.</div>
+        </div>
+        <div class="faq-item reveal fade-up">
+          <div class="faq-question">Who is it for? <i class="fas fa-plus"></i></div>
+          <div class="faq-answer">Students who want a structured, AI-guided study routine.</div>
+        </div>
+        <div class="faq-item reveal fade-up">
+          <div class="faq-question">How do I create an account? <i class="fas fa-plus"></i></div>
+          <div class="faq-answer">Click any "Create Account" button and join in seconds.</div>
+        </div>
+        <div class="faq-item reveal fade-up">
+          <div class="faq-question">When will more features be released? <i class="fas fa-plus"></i></div>
+          <div class="faq-answer">Check our roadmap; we're iterating quickly based on feedback.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="cta-section reveal fade-up">
+      <h2 style="font-size:2.4rem;font-family:'Space Grotesk';">Start Building Better Study Habits Today</h2>
+      <div style="display:flex;gap:1.2rem;justify-content:center;margin-top:2rem;flex-wrap:wrap;">
+        <a href="#" class="btn btn-primary btn-lg create-account-btn">Create Account</a>
+        <a href="#" class="btn btn-outline btn-lg">Learn More</a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================================================
+  FOOTER
+  ================================================ -->
+  <footer id="contact">
+    <div class="container footer-inner">
+      <div class="logo"><i class="fas fa-brain"></i> Neo Mentor AI</div>
+      <div style="display:flex;gap:2rem;color:var(--text-secondary);flex-wrap:wrap;">
+        <a href="#" style="color:inherit;text-decoration:none;">Privacy Policy</a>
+        <a href="#" style="color:inherit;text-decoration:none;">Terms</a>
+        <a href="#" style="color:inherit;text-decoration:none;">Contact</a>
+      </div>
+      <div class="social-icons">
+        <i class="fab fa-twitter"></i>
+        <i class="fab fa-linkedin-in"></i>
+        <i class="fab fa-github"></i>
+      </div>
+      <div style="color:var(--text-muted);">© 2026 Neo Mentor AI. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <!-- ================================================
+  JAVASCRIPT
+  ================================================ -->
+  <script>
+    (function () {
+      // ──────────────────────────────────────────────
+      // LOADING SCREEN
+      // ──────────────────────────────────────────────
+      const loadingScreen = document.getElementById('loading-screen');
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          loadingScreen.classList.add('hidden');
+        }, 2200);
+      });
+
+      // ──────────────────────────────────────────────
+      // CUSTOM CURSOR GLOW (desktop only)
+      // ──────────────────────────────────────────────
+      const cursorGlow = document.getElementById('cursorGlow');
+      if (window.innerWidth > 768) {
+        document.addEventListener('mousemove', (e) => {
+          cursorGlow.style.left = e.clientX + 'px';
+          cursorGlow.style.top = e.clientY + 'px';
+        });
+      }
+
+      // ──────────────────────────────────────────────
+      // PARTICLE BACKGROUND (Canvas)
+      // ──────────────────────────────────────────────
+      const canvas = document.getElementById('bg-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let animationFrame;
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.radius = Math.random() * 2.2 + 0.6;
+          this.speedX = (Math.random() - 0.5) * 0.35;
+          this.speedY = (Math.random() - 0.5) * 0.35;
+          this.opacity = Math.random() * 0.45 + 0.15;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          if (this.x < -10 || this.x > canvas.width + 10 || this.y < -10 || this.y > canvas.height + 10) {
+            this.reset();
+          }
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(180,200,255,${this.opacity})`;
+          ctx.fill();
+        }
+      }
+
+      function initParticles(count = 90) {
+        particles = [];
+        for (let i = 0; i < count; i++) {
+          particles.push(new Particle());
+        }
+      }
+      initParticles();
+
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+        animationFrame = requestAnimationFrame(animateParticles);
+      }
+      animateParticles();
+
+      // ──────────────────────────────────────────────
+      // SCROLL REVEAL (Intersection Observer)
+      // ──────────────────────────────────────────────
+      const revealElements = document.querySelectorAll('.reveal');
+      const observerOptions = {
+        threshold: 0.18,
+        rootMargin: '0px 0px -30px 0px'
+      };
+
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            revealObserver.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      revealElements.forEach(el => revealObserver.observe(el));
+
+      // ──────────────────────────────────────────────
+      // ANIMATED COUNTERS
+      // ──────────────────────────────────────────────
+      const counterElements = document.querySelectorAll('.stat-number[data-target]');
+      const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const el = entry.target;
+            const target = parseInt(el.getAttribute('data-target'), 10);
+            const duration = 1800;
+            const startTime = performance.now();
+            const startVal = 0;
+
+            function updateCounter(timestamp) {
+              const elapsed = timestamp - startTime;
+              const progress = Math.min(elapsed / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3); // ease-out
+              el.textContent = Math.floor(startVal + (target - startVal) * eased);
+              if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+              } else {
+                el.textContent = target;
+              }
+            }
+            requestAnimationFrame(updateCounter);
+            counterObserver.unobserve(el);
+          }
+        });
+      }, { threshold: 0.6 });
+
+      counterElements.forEach(el => counterObserver.observe(el));
+
+      // ──────────────────────────────────────────────
+      // FAQ ACCORDION
+      // ──────────────────────────────────────────────
+      document.querySelectorAll('.faq-question').forEach(q => {
+        q.addEventListener('click', () => {
+          const item = q.parentElement;
+          const isOpen = item.classList.contains('open');
+          // Close all
+          document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('open'));
+          if (!isOpen) {
+            item.classList.add('open');
+          }
+        });
+      });
+
+      // ──────────────────────────────────────────────
+      // BUTTON RIPPLE EFFECT
+      // ──────────────────────────────────────────────
+      document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          const ripple = document.createElement('span');
+          ripple.classList.add('ripple');
+          const rect = this.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          ripple.style.width = ripple.style.height = size + 'px';
+          ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+          ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+          this.appendChild(ripple);
+          ripple.addEventListener('animationend', () => ripple.remove());
+        });
+      });
+
+      document.querySelectorAll('.nav-links a, a[href="#"]').forEach(link => {
+        if (!link.classList.contains('btn')) {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (link.textContent.includes('Learn More') || link.textContent.includes('Contact')) {
+              alert('📘 This section is part of the V1 preview.');
+            }
+          });
+        }
+      });
+
+      // ──────────────────────────────────────────────
+      // NAVBAR SCROLL EFFECT
+      // ──────────────────────────────────────────────
+      const navbar = document.getElementById('navbar');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 30) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      });
+
+      console.log('🚀 Neo Mentor AI — Premium V1 landing page ready.');
+    })();
+  </script>
+</body>
+</html>
