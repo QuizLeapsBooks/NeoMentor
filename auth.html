@@ -809,7 +809,6 @@
     ================================================ -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
         (function() {
@@ -830,7 +829,6 @@
 
             firebase.initializeApp(firebaseConfig);
             const auth = firebase.auth();
-            const database = firebase.database();
             const firestore = firebase.firestore();
 
             // keep sessions alive across reloads
@@ -929,24 +927,20 @@
             }
 
             async function saveUserProfile(user, name) {
-                const payload = {
+                // Neo Mentor uses the existing NeoBranium Firebase Auth user only.
+                // Do not create a second account or a duplicate platform user profile here.
+                if (name && user.displayName !== name) {
+                    await user.updateProfile({ displayName: name });
+                }
+                const userPath = `users/${user.uid}`;
+                await database.ref(userPath).update({
                     uid: user.uid,
                     name: name || user.displayName || 'Neo Mentor User',
-                    email: user.email,
-                    photoURL: user.photoURL || '',
+                    email: user.email || '',
                     provider: user.providerData?.[0]?.providerId || 'password',
-                    createdAt: firebase.database.ServerValue.TIMESTAMP,
                     lastLoginAt: firebase.database.ServerValue.TIMESTAMP,
-                    website: 'NeoMentor Auth'
-                };
-
-                const userPath = `neomentorApp/users/${user.uid}`;
-                const docRef = firestore.collection('neomentorAppUsers').doc(user.uid);
-
-                await Promise.all([
-                    database.ref(userPath).update(payload),
-                    docRef.set({ ...payload, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true })
-                ]);
+                    updatedAt: firebase.database.ServerValue.TIMESTAMP
+                });
             }
 
             function redirectToDashboard() {
@@ -1061,21 +1055,40 @@
             });
 
             // ──────────────────────────────────────────────
-            // SOCIAL BUTTONS (placeholder)
+            // SOCIAL SIGN-IN
             // ──────────────────────────────────────────────
             document.querySelectorAll('.btn-social').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const provider = this.textContent.trim() || 'Social';
-                    alert(`🔐 ${provider} authentication (MVP placeholder)\n\nThis would connect to ${provider} OAuth in production.`);
+                btn.addEventListener('click', async function() {
+                    const providerName = this.textContent.trim();
+                    const provider = providerName.includes('Google')
+                        ? new firebase.auth.GoogleAuthProvider()
+                        : new firebase.auth.GithubAuthProvider();
+                    try {
+                        this.disabled = true;
+                        const credential = await auth.signInWithPopup(provider);
+                        await saveUserProfile(credential.user, credential.user.displayName || 'Neo Mentor User');
+                        redirectToDashboard();
+                    } catch (error) {
+                        showMessage(loginMsg, `⚠️ ${error.message || `${providerName} sign-in failed.`}`, 'error');
+                    } finally {
+                        this.disabled = false;
+                    }
                 });
             });
 
             // ──────────────────────────────────────────────
-            // FORGOT PASSWORD (placeholder)
+            // PASSWORD RESET
             // ──────────────────────────────────────────────
             document.querySelector('.form-options a[href="#"]')?.addEventListener('click', function(e) {
                 e.preventDefault();
-                alert('📧 Password reset link would be sent to your email.\n\n(MVP placeholder)');
+                const email = document.getElementById('loginEmail').value.trim();
+                if (!email) {
+                    showMessage(loginMsg, '⚠️ Enter your email address first, then select Forgot password.', 'error');
+                    return;
+                }
+                auth.sendPasswordResetEmail(email)
+                    .then(() => showMessage(loginMsg, '✅ Password-reset email sent. Check your inbox.', 'success'))
+                    .catch(error => showMessage(loginMsg, `⚠️ ${error.message || 'Could not send reset email.'}`, 'error'));
             });
 
             // ──────────────────────────────────────────────

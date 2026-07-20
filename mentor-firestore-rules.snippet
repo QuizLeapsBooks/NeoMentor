@@ -1,0 +1,41 @@
+// Paste these match blocks INSIDE NeoBranium's existing
+// service cloud.firestore { match /databases/{database}/documents { ... } } block.
+// Do not replace the existing platform rules.
+
+match /mentor_profiles/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+match /mentor_settings/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+match /mentor_activity/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+match /mentor_chat/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+match /mentor_chat/{userId}/messages/{messageId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+match /mentor_goals/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+match /mentor_goals/{userId}/items/{goalId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+match /mentor_chat/{userId}/messages/{messageId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+// Only the trusted server (Firebase Admin SDK) writes the AI summary.
+match /mentor_memory/{userId} {
+  allow read: if request.auth != null && request.auth.uid == userId;
+  allow write: if false;
+}

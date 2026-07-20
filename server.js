@@ -1,6 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+let admin = null;
+try {
+  admin = require('firebase-admin');
+  if (!admin.apps.length) admin.initializeApp();
+} catch (error) {
+  // Local development can run without Admin credentials; AI falls back to client context.
+  admin = null;
+}
 
 dotenv.config();
 
@@ -53,7 +61,8 @@ app.post('/api/goal-suggest', async (req, res) => {
 
     let data;
     try {
-      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+      const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+      const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -87,6 +96,84 @@ app.post('/api/goal-suggest', async (req, res) => {
     return res.json(suggestion);
   } catch (error) {
     return res.status(500).json({ error: error.message || 'Server error' });
+  }
+});
+
+function createFallbackChatReply(message, profile = {}) {
+  const subject = profile.favoriteSubject || profile.exam || 'your studies';
+  const cleanMessage = String(message || '').trim();
+  if (!cleanMessage) return `Hi! What would you like help with in ${subject} today?`;
+  return `Let’s work through that step by step. For ${subject}, start with one small, focused task: identify the part of “${cleanMessage.slice(0, 90)}” that feels hardest, then spend 20 minutes on it. Tell me what you get stuck on and I’ll help you from there.`;
+}
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message = '', history = [], profile = {}, uid: requestedUid = '' } = req.body || {};
+    const cleanMessage = String(message).trim();
+    if (!cleanMessage) return res.status(400).json({ error: 'A message is required.' });
+    if (cleanMessage.length > 4000) return res.status(400).json({ error: 'Please keep messages under 4,000 characters.' });
+
+    let uid = requestedUid;
+    let mentorData = { profile, goals: [], settings: {}, activity: [], messages: history, memory: {} };
+    if (admin) {
+      const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+      if (!token) return res.status(401).json({ error: 'Sign in is required.' });
+      const decoded = await admin.auth().verifyIdToken(token);
+      uid = decoded.uid;
+      const db = admin.firestore();
+      const [profileDoc, settingsDoc, activityDoc, memoryDoc, goalsSnapshot, messagesSnapshot] = await Promise.all([
+        db.collection('mentor_profiles').doc(uid).get(),
+        db.collection('mentor_settings').doc(uid).get(),
+        db.collection('mentor_activity').doc(uid).get(),
+        db.collection('mentor_memory').doc(uid).get(),
+        db.collection('mentor_goals').doc(uid).collection('items').get(),
+        db.collection('mentor_chat').doc(uid).collection('messages').orderBy('createdAt', 'desc').limit(30).get()
+      ]);
+      mentorData = {
+        profile: profileDoc.exists ? profileDoc.data() : profile,
+        settings: settingsDoc.exists ? settingsDoc.data() : {},
+        activity: activityDoc.exists ? activityDoc.data().events || [] : [],
+        messages: messagesSnapshot.empty ? history : messagesSnapshot.docs.map(doc => doc.data()).reverse(),
+        memory: memoryDoc.exists ? memoryDoc.data() : {},
+        goals: goalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      };
+    }
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.json({ reply: createFallbackChatReply(cleanMessage, mentorData.profile), fallback: true });
+
+    const mentorContext = {
+      ...mentorData.profile,
+      goals: mentorData.goals.map(goal => ({ title: goal.title, description: goal.description, completed: goal.completed })),
+      settings: mentorData.settings,
+      recentActivity: mentorData.activity.slice(0, 5),
+      memorySummary: mentorData.memory.summary || ''
+    };
+    const recentHistory = Array.isArray(mentorData.messages) ? mentorData.messages.slice(-12).map(item => ({
+      role: item.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: String(item.content || '').slice(0, 2000) }]
+    })) : [];
+    const system = `You are Neo Mentor AI, a supportive long-term academic mentor. Use this student profile: ${JSON.stringify(mentorContext)}. Give practical, accurate study guidance in the student's preferred explanation style. Be concise (under 220 words), encouraging, and do not pretend to have completed work or know facts not provided. Ask one useful follow-up question when needed.`;
+    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [...recentHistory, { role: 'user', parts: [{ text: cleanMessage }] }],
+        generationConfig: { temperature: 0.65, maxOutputTokens: 500 }
+      })
+    });
+    const data = await geminiResponse.json();
+    if (!geminiResponse.ok) throw new Error(data?.error?.message || 'AI request failed.');
+    const reply = data?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('').trim();
+    const finalReply = reply || createFallbackChatReply(cleanMessage, mentorData.profile);
+    if (admin && uid) {
+      const summary = `Student: ${mentorData.profile.name || 'Student'}. Goal focus: ${mentorData.goals.filter(goal => !goal.completed).slice(0, 3).map(goal => goal.title).join(', ') || 'no active goals'}. Recent discussion: ${[...mentorData.messages.slice(-4), { role: 'user', content: cleanMessage }, { role: 'assistant', content: finalReply }].map(item => `${item.role}: ${String(item.content || '').slice(0, 180)}`).join(' | ')}`;
+      await admin.firestore().collection('mentor_memory').doc(uid).set({ uid, summary, updatedAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    }
+    return res.json({ reply: finalReply });
+  } catch (error) {
+    return res.json({ reply: createFallbackChatReply(req.body?.message, req.body?.profile), fallback: true });
   }
 });
 

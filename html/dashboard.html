@@ -942,6 +942,38 @@
             color: var(--text-secondary);
             margin-top: 0.2rem;
         }
+        .chat-shell { max-width: 900px; margin: 0 auto; }
+        .chat-header { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; }
+        .chat-status { color:var(--text-muted); font-size:.82rem; }
+        .sync-status { color:var(--text-muted); font-size:.72rem; margin-top:.25rem; }
+        .sync-status.syncing { color:var(--neon-blue); }
+        .sync-status.error { color:#ff8585; }
+        .chat-messages { height:min(56vh, 540px); overflow-y:auto; display:flex; flex-direction:column; gap:.85rem; padding:.5rem .15rem 1rem; }
+        .chat-message { display:flex; gap:.65rem; max-width:86%; align-items:flex-start; }
+        .chat-message.user { align-self:flex-end; flex-direction:row-reverse; }
+        .chat-avatar { width:32px; height:32px; border-radius:50%; display:grid; place-items:center; flex-shrink:0; background:rgba(176,111,255,.18); color:var(--purple-accent); }
+        .chat-message.user .chat-avatar { background:rgba(77,143,255,.18); color:var(--neon-blue); }
+        .chat-bubble { padding:.7rem .9rem; border-radius:1rem 1rem 1rem .25rem; background:rgba(255,255,255,.06); color:var(--text-primary); white-space:pre-wrap; overflow-wrap:anywhere; }
+        .chat-message.user .chat-bubble { border-radius:1rem 1rem .25rem 1rem; background:rgba(77,143,255,.18); }
+        .chat-meta { font-size:.7rem; color:var(--text-muted); margin-top:.22rem; }
+        .chat-message.user .chat-meta { text-align:right; }
+        .chat-form { display:flex; gap:.7rem; border-top:1px solid var(--border-glass); padding-top:1rem; }
+        .chat-form textarea,
+        .goal-form input,
+        .goal-form textarea {
+            min-height:46px;
+            background:var(--input-bg);
+            border:1px solid rgba(255,255,255,.10);
+            border-radius:1rem;
+            padding:.75rem 1rem;
+            color:var(--text-primary);
+            font:inherit;
+            outline:none;
+        }
+        .chat-form textarea { max-height:140px; resize:vertical; flex:1; }
+        .chat-form textarea:focus, .goal-form input:focus, .goal-form textarea:focus { border-color:var(--neon-blue); box-shadow:0 0 0 3px rgba(77,143,255,.12); }
+        .chat-form textarea::placeholder, .goal-form input::placeholder, .goal-form textarea::placeholder { color:var(--text-muted); }
+        @media (max-width: 600px) { .chat-form { flex-direction:column; } .chat-form button { width:100%; } .chat-message { max-width:94%; } }
         .time-table {
             display: grid;
             gap: 0.6rem;
@@ -1434,8 +1466,8 @@
 
         <nav class="sidebar-nav" id="sidebarNav">
             <a href="#" class="active" data-page="dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
-            <a href="#" data-page="chat"><i class="fas fa-comment-dots"></i> AI Chat <span class="badge-coming">Soon</span></a>
-            <a href="#" data-page="goals"><i class="fas fa-bullseye"></i> Goals <span class="badge-coming">Soon</span></a>
+            <a href="#" data-page="chat"><i class="fas fa-comment-dots"></i> AI Chat</a>
+            <a href="#" data-page="goals"><i class="fas fa-bullseye"></i> Goals</a>
             <a href="#" data-page="profile"><i class="fas fa-user"></i> Profile</a>
             <a href="#" data-page="settings"><i class="fas fa-cog"></i> Settings</a>
         </nav>
@@ -1446,6 +1478,7 @@
                 <div class="user-info">
                     <div class="name" id="sidebarName">Student</div>
                     <div class="role">Neo Mentor</div>
+                    <div class="sync-status" id="syncStatus">Connecting…</div>
                 </div>
             </div>
         </div>
@@ -2077,18 +2110,13 @@
         </div>
 
         <!-- ==========================================================
-        CHAT (placeholder)
+        AI CHAT
         ========================================================== -->
         <div class="page-section" id="page-chat">
-            <div class="card" style="text-align:center;padding:4rem 2rem;">
-                <i class="fas fa-comment-dots" style="font-size:4rem;color:var(--neon-blue);opacity:0.3;margin-bottom:1rem;"></i>
-                <h2 style="font-family:'Space Grotesk',sans-serif;">AI Chat</h2>
-                <p style="color:var(--text-secondary);max-width:400px;margin:0.5rem auto;">Chat with your AI mentor. Get personalized study help, explanations, and motivation.</p>
-                <div class="coming-item" style="display:inline-block;border:none;background:rgba(176,111,255,0.06);padding:0.4rem 1.5rem;border-radius:2rem;margin-top:1rem;">
-                    <span class="tag" style="font-size:0.7rem;">Coming Soon in v2</span>
-                </div>
-                <br />
-                <button class="btn btn-outline mt-2" onclick="navigateTo('dashboard')"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+            <div class="card chat-shell">
+                <div class="chat-header"><div><div class="card-title"><i class="fas fa-comment-dots"></i> Neo Mentor AI</div><div class="chat-status" id="chatStatus">Your chat history is saved securely to your account.</div></div><button class="btn btn-outline btn-sm" type="button" onclick="clearChatHistory()"><i class="fas fa-trash"></i> Clear</button></div>
+                <div class="chat-messages" id="chatMessages" aria-live="polite"></div>
+                <form class="chat-form" id="chatForm"><textarea id="chatInput" maxlength="4000" placeholder="Ask about a topic, your study plan, or motivation…" required></textarea><button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane"></i> Send</button></form>
             </div>
         </div>
 
@@ -2120,7 +2148,6 @@
     ============================================================ -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
         (function() {
@@ -2161,10 +2188,12 @@
 
             let currentUser = null;
             let firebaseAuth = null;
-            let firebaseDb = null;
             let firebaseFirestore = null;
             let goals = [];
             let activityItems = [];
+            let chatMessages = [];
+            let userSyncRef = null;
+            let firestoreUserUnsubscribe = null;
             let editingGoalId = null;
 
             // ============================================================
@@ -2193,6 +2222,11 @@
             const goalDescriptionInput = document.getElementById('goalDescriptionInput');
             const goalPromptInput = document.getElementById('goalPromptInput');
             const goalMessage = document.getElementById('goalMessage');
+            const chatMessagesEl = document.getElementById('chatMessages');
+            const chatForm = document.getElementById('chatForm');
+            const chatInput = document.getElementById('chatInput');
+            const chatStatus = document.getElementById('chatStatus');
+            const syncStatus = document.getElementById('syncStatus');
 
             // ============================================================
             // INIT
@@ -2201,10 +2235,10 @@
                 buildStepIndicators();
                 updateProgress();
                 updateStepVisibility();
-                loadActivityItems();
                 applyProfileToUI();
                 renderGoals();
                 renderActivity();
+                renderChatMessages();
 
                 // Sidebar toggle
                 sidebarToggle.addEventListener('click', toggleSidebar);
@@ -2215,12 +2249,7 @@
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
                         const page = this.dataset.page;
-                        if (page === 'chat' || page === 'goals') {
-                            // These are "coming soon" — just navigate to them
-                            navigateTo(page);
-                        } else {
-                            navigateTo(page);
-                        }
+                        navigateTo(page);
                         // Close sidebar on mobile
                         if (window.innerWidth <= 768) {
                             closeSidebar();
@@ -2228,7 +2257,6 @@
                     });
                 });
 
-                // Load settings from localStorage (if any)
                 loadSettings();
 
                 console.log('🚀 Neo Mentor AI · v1 loaded');
@@ -2395,27 +2423,20 @@
             }
 
             // ============================================================
-            // PROFILE DATA PERSISTENCE (localStorage + Firebase)
+            // Firebase is the only persistence layer for Mentor data.
             // ============================================================
             function saveProfileData() {
-                try {
-                    localStorage.setItem('neoMentorProfile', JSON.stringify(profileData));
-                    localStorage.setItem('neoMentorCompleted', 'true');
-                } catch (e) { /* ignore */ }
+                // Kept as a compatibility hook; intentionally no localStorage writes.
             }
 
             function loadProfileData() {
-                try {
-                    const saved = localStorage.getItem('neoMentorProfile');
-                    const completed = localStorage.getItem('neoMentorCompleted');
-                    if (completed === 'true' && saved) {
-                        const data = JSON.parse(saved);
-                        Object.assign(profileData, data);
-                        profileCompleted = true;
-                        return true;
-                    }
-                } catch (e) { /* ignore */ }
                 return false;
+            }
+
+            function setSyncStatus(message, state = '') {
+                if (!syncStatus) return;
+                syncStatus.textContent = message;
+                syncStatus.className = `sync-status ${state}`;
             }
 
             function ensureFirebase() {
@@ -2431,90 +2452,54 @@
                     };
                     firebase.initializeApp(firebaseConfig);
                     firebaseAuth = firebase.auth();
-                    firebaseDb = firebase.database();
                     firebaseFirestore = firebase.firestore();
                     firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
                 }
-                return !!firebaseAuth && !!firebaseDb && !!firebaseFirestore;
+                return !!firebaseAuth && !!firebaseFirestore;
             }
 
             async function saveUserStateToFirebase(changes = {}) {
                 if (!ensureFirebase() || !currentUser) return;
+                const uid = currentUser.uid;
+                const db = firebaseFirestore;
+                const stamp = firebase.firestore.FieldValue.serverTimestamp();
                 try {
-                    const userPath = `neomentorApp/users/${currentUser.uid}`;
-                    const docRef = firebaseFirestore.collection('neomentorAppUsers').doc(currentUser.uid);
-                    const [rtSnapshot, fsSnapshot, legacySnapshot] = await Promise.all([
-                        firebaseDb.ref(userPath).once('value'),
-                        docRef.get(),
-                        firebaseDb.ref(`users/${currentUser.uid}`).once('value').catch(() => ({ val: () => null }))
-                    ]);
-
-                    const rtData = rtSnapshot.val() || {};
-                    const legacyData = legacySnapshot && typeof legacySnapshot.val === 'function' ? legacySnapshot.val() || {} : {};
-                    const fsData = fsSnapshot.exists ? fsSnapshot.data() : {};
-
-                    const mergedRtData = {
-                        ...(legacyData || {}),
-                        ...(rtData || {})
-                    };
-                    const mergedFsData = {
-                        ...(legacyData || {}),
-                        ...(fsData || {})
-                    };
-
-                    if (changes.profile) {
-                        mergedRtData.profile = { ...(mergedRtData.profile || {}), ...(changes.profile || {}) };
-                        mergedFsData.profile = { ...(mergedFsData.profile || {}), ...(changes.profile || {}) };
+                    setSyncStatus('Saving to Firebase…', 'syncing');
+                    const writes = [];
+                    if (changes.profile) writes.push(db.collection('mentor_profiles').doc(uid).set({ ...changes.profile, uid, updatedAt: stamp }, { merge: true }));
+                    if (changes.settings) writes.push(db.collection('mentor_settings').doc(uid).set({ ...changes.settings, uid, updatedAt: stamp }, { merge: true }));
+                    if (changes.activity) writes.push(db.collection('mentor_activity').doc(uid).set({ events: changes.activity, uid, updatedAt: stamp }, { merge: true }));
+                    if (changes.chatMessages) {
+                        const latest = changes.chatMessages[changes.chatMessages.length - 1];
+                        if (latest?.id && latest.id !== 'welcome') {
+                            writes.push(db.collection('mentor_chat').doc(uid).collection('messages').doc(latest.id).set({ ...latest, uid, updatedAt: stamp }, { merge: true }));
+                        }
+                        writes.push(db.collection('mentor_chat').doc(uid).set({ uid, updatedAt: stamp }, { merge: true }));
                     }
                     if (changes.goals) {
-                        mergedRtData.goals = { ...(mergedRtData.goals || {}), ...(changes.goals || {}) };
-                        mergedFsData.goals = { ...(mergedFsData.goals || {}), ...(changes.goals || {}) };
+                        const existing = await db.collection('mentor_goals').doc(uid).collection('items').get();
+                        const batch = db.batch();
+                        const ids = new Set(Object.keys(changes.goals));
+                        existing.forEach(doc => { if (!ids.has(doc.id)) batch.delete(doc.ref); });
+                        Object.entries(changes.goals).forEach(([id, goal]) => batch.set(db.collection('mentor_goals').doc(uid).collection('items').doc(id), { ...goal, uid, updatedAt: stamp }, { merge: true }));
+                        writes.push(batch.commit());
                     }
-                    if (changes.activity) {
-                        mergedRtData.activity = changes.activity;
-                        mergedFsData.activity = changes.activity;
-                    }
-
-                    const rtPayload = {
-                        ...mergedRtData,
-                        uid: currentUser.uid,
-                        email: currentUser.email || '',
-                        updatedAt: firebase.database.ServerValue.TIMESTAMP,
-                        ...changes
-                    };
-                    if (changes.profile) rtPayload.profile = mergedRtData.profile;
-                    if (changes.goals) rtPayload.goals = mergedRtData.goals;
-                    if (changes.activity) rtPayload.activity = mergedRtData.activity;
-
-                    const fsPayload = {
-                        ...mergedFsData,
-                        uid: currentUser.uid,
-                        email: currentUser.email || '',
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        ...changes
-                    };
-                    if (changes.profile) fsPayload.profile = mergedFsData.profile;
-                    if (changes.goals) fsPayload.goals = mergedFsData.goals;
-                    if (changes.activity) fsPayload.activity = mergedFsData.activity;
-
-                    await Promise.all([
-                        firebaseDb.ref(userPath).update(rtPayload),
-                        docRef.set(fsPayload, { merge: true })
-                    ]);
+                    await Promise.all(writes);
+                    setSyncStatus('All changes saved', '');
                 } catch (e) {
-                    console.error('Could not sync data to Firebase', e);
+                    console.error('Could not sync Mentor data to Firestore', e);
+                    setSyncStatus(`Firebase save failed: ${e.code || e.message || 'unknown error'}`, 'error');
+                    if (chatStatus) chatStatus.textContent = `Firebase error: ${e.code || e.message || 'check Firestore rules'}`;
                 }
             }
 
             async function loadProfileFromFirebase() {
                 if (!ensureFirebase() || !currentUser) return;
                 try {
-                    const profileRef = firebaseDb.ref(`neomentorApp/users/${currentUser.uid}/profile`);
-                    const snapshot = await profileRef.once('value');
-                    const data = snapshot.val();
-                    if (data) {
-                        Object.assign(profileData, data);
-                        profileCompleted = Boolean(data.name || data.class || data.school || data.course || data.studyHours);
+                    const snapshot = await firebaseFirestore.collection('mentor_profiles').doc(currentUser.uid).get();
+                    if (snapshot.exists) {
+                        Object.assign(profileData, snapshot.data());
+                        profileCompleted = Boolean(profileData.name);
                         saveProfileData();
                     }
                 } catch (e) {
@@ -2528,8 +2513,7 @@
                     const payload = {
                         ...profileData,
                         uid: currentUser.uid,
-                        email: currentUser.email || '',
-                        updatedAt: firebase.database.ServerValue.TIMESTAMP
+                        email: currentUser.email || ''
                     };
                     await saveUserStateToFirebase({ profile: payload });
                 } catch (e) {
@@ -2540,13 +2524,63 @@
             async function loadGoalsFromFirebase() {
                 if (!ensureFirebase() || !currentUser) return;
                 try {
-                    const snapshot = await firebaseDb.ref(`neomentorApp/users/${currentUser.uid}/goals`).once('value');
-                    const data = snapshot.val() || {};
-                    goals = Object.entries(data).map(([id, item]) => ({ id, ...item })).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+                    const snapshot = await firebaseFirestore.collection('mentor_goals').doc(currentUser.uid).collection('items').get();
+                    goals = snapshot.docs.map(doc => normalizeGoal({ id: doc.id, ...doc.data() })).sort((a, b) => b.updatedAt - a.updatedAt);
                     renderGoals();
                 } catch (e) {
                     console.error('Could not load goals', e);
                 }
+            }
+
+            function toMillis(value) {
+                return typeof value === 'number' ? value : value?.toMillis ? value.toMillis() : Date.now();
+            }
+
+            function normalizeGoal(goal) {
+                return { ...goal, updatedAt: toMillis(goal.updatedAt), createdAt: toMillis(goal.createdAt), completedAt: goal.completedAt ? toMillis(goal.completedAt) : null };
+            }
+
+            function applySettings(settings = {}) {
+                document.getElementById('settingsTheme').value = settings.theme || 'dark';
+                document.getElementById('settingsLanguage').value = settings.language || 'en';
+                document.querySelectorAll('.settings-item .toggle-switch').forEach((sw, idx) => {
+                    sw.classList.toggle('active', settings.toggles?.[idx] !== undefined ? settings.toggles[idx] : sw.classList.contains('active'));
+                });
+            }
+
+            function startRealtimeUserSync() {
+                if (!ensureFirebase() || !currentUser) return;
+                if (firestoreUserUnsubscribe) firestoreUserUnsubscribe();
+                const uid = currentUser.uid;
+                const unsubscribers = [
+                    firebaseFirestore.collection('mentor_profiles').doc(uid).onSnapshot(snapshot => {
+                        if (!snapshot.exists) return;
+                        Object.assign(profileData, snapshot.data());
+                        profileCompleted = Boolean(profileData.name);
+                        saveProfileData();
+                        applyProfileToUI();
+                    }, error => setSyncStatus(`Profile sync failed: ${error.code || 'permission denied'}`, 'error')),
+                    firebaseFirestore.collection('mentor_goals').doc(uid).collection('items').onSnapshot(snapshot => {
+                        goals = snapshot.docs.map(doc => normalizeGoal({ id: doc.id, ...doc.data() })).sort((a, b) => b.updatedAt - a.updatedAt);
+                        renderGoals();
+                        updateDashboardGreeting();
+                    }, error => setSyncStatus(`Goals sync failed: ${error.code || 'permission denied'}`, 'error')),
+                    firebaseFirestore.collection('mentor_activity').doc(uid).onSnapshot(snapshot => {
+                        if (!snapshot.exists) return;
+                        activityItems = snapshot.data().events || [];
+                        saveActivityItems();
+                        renderActivity();
+                    }, error => setSyncStatus(`Activity sync failed: ${error.code || 'permission denied'}`, 'error')),
+                    firebaseFirestore.collection('mentor_chat').doc(uid).collection('messages').orderBy('createdAt', 'asc').limitToLast(100).onSnapshot(snapshot => {
+                        chatMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        renderChatMessages();
+                    }, error => setSyncStatus(`Chat sync failed: ${error.code || 'permission denied'}`, 'error')),
+                    firebaseFirestore.collection('mentor_settings').doc(uid).onSnapshot(snapshot => {
+                        if (snapshot.exists) applySettings(snapshot.data());
+                        setSyncStatus('Firebase connected', '');
+                    }, error => setSyncStatus(`Settings sync failed: ${error.code || 'permission denied'}`, 'error'))
+                ];
+                firestoreUserUnsubscribe = () => unsubscribers.forEach(unsubscribe => unsubscribe());
             }
 
             async function saveGoalsToFirebase() {
@@ -2563,22 +2597,89 @@
             }
 
             function loadActivityItems() {
-                try {
-                    const saved = localStorage.getItem('neoMentorActivity');
-                    if (saved) {
-                        activityItems = JSON.parse(saved);
-                    }
-                } catch (e) {
-                    activityItems = [];
-                }
+                activityItems = [];
             }
 
             function saveActivityItems() {
-                try {
-                    localStorage.setItem('neoMentorActivity', JSON.stringify(activityItems));
-                } catch (e) {
-                    // ignore
+                // Activity persists through mentor_activity in Firestore only.
+            }
+
+            function escapeHtml(value) {
+                const el = document.createElement('div');
+                el.textContent = String(value || '');
+                return el.innerHTML;
+            }
+
+            function renderChatMessages() {
+                if (!chatMessagesEl) return;
+                const messages = chatMessages.length ? chatMessages : [{
+                    id: 'welcome', role: 'assistant', content: `Hi${profileData.name ? ` ${profileData.name}` : ''}! I’m your Neo Mentor. What would you like to work on today?`, createdAt: Date.now()
+                }];
+                chatMessagesEl.innerHTML = messages.map(message => {
+                    const isUser = message.role === 'user';
+                    const time = new Date(message.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return `<div class="chat-message ${isUser ? 'user' : ''}"><div class="chat-avatar"><i class="fas ${isUser ? 'fa-user' : 'fa-brain'}"></i></div><div><div class="chat-bubble">${escapeHtml(message.content)}</div><div class="chat-meta">${isUser ? 'You' : 'Neo Mentor'} · ${time}</div></div></div>`;
+                }).join('');
+                chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+            }
+
+            async function saveChatMessages() {
+                if (currentUser) await saveUserStateToFirebase({ chatMessages: chatMessages.slice(-100) });
+            }
+
+            function apiEndpoint(path) {
+                const configuredBase = window.NEOMENTOR_API_BASE;
+                if (configuredBase) return `${configuredBase.replace(/\/$/, '')}${path.replace(/^\/api/, '')}`;
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    return `${window.location.protocol}//${window.location.hostname}:3000${path}`;
                 }
+                return path;
+            }
+
+            async function handleChatSubmit(event) {
+                event.preventDefault();
+                const text = chatInput.value.trim();
+                if (!text || !currentUser) return;
+                chatMessages.push({ id: `message-${Date.now()}`, role: 'user', content: text, createdAt: Date.now() });
+                chatInput.value = '';
+                renderChatMessages();
+                chatStatus.textContent = 'Neo Mentor is thinking…';
+                await saveChatMessages();
+                try {
+                    const idToken = await currentUser.getIdToken();
+                    const response = await fetch(apiEndpoint('/api/chat'), {
+                        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                        body: JSON.stringify({ uid: currentUser.uid, message: text, history: chatMessages.slice(-10), profile: profileData })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Unable to get an answer.');
+                    chatMessages.push({ id: `message-${Date.now()}-mentor`, role: 'assistant', content: data.reply, createdAt: Date.now() });
+                    chatStatus.textContent = data.fallback ? 'AI service is unavailable; showing a basic mentor response.' : 'Chat history is saved securely to your account.';
+                    pushActivity('chat', 'AI mentor conversation', 'New chat response saved');
+                } catch (error) {
+                    chatMessages.push({ id: `message-${Date.now()}-error`, role: 'assistant', content: 'I could not reach the AI service right now. Please try again in a moment.', createdAt: Date.now() });
+                    const localApi = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                    chatStatus.textContent = localApi
+                        ? 'AI server is not running. Run “npm install” once, then “npm start” in this project.'
+                        : 'Could not connect to the AI service. Check the deployed /api rewrite and function logs.';
+                }
+                await saveChatMessages();
+                renderChatMessages();
+            }
+
+            async function clearChatHistory() {
+                if (!chatMessages.length || !window.confirm('Clear this chat history? This cannot be undone.')) return;
+                if (currentUser && ensureFirebase()) {
+                    const messagesRef = firebaseFirestore.collection('mentor_chat').doc(currentUser.uid).collection('messages');
+                    const snapshot = await messagesRef.get();
+                    const batch = firebaseFirestore.batch();
+                    snapshot.forEach(doc => batch.delete(doc.ref));
+                    batch.set(firebaseFirestore.collection('mentor_chat').doc(currentUser.uid), { uid: currentUser.uid, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    await batch.commit();
+                }
+                chatMessages = [];
+                renderChatMessages();
+                chatStatus.textContent = 'Chat history cleared.';
             }
 
             function pushActivity(type, title, detail) {
@@ -2592,7 +2693,7 @@
                 saveActivityItems();
                 renderActivity();
                 if (ensureFirebase() && currentUser) {
-                    saveUserStateToFirebase({ activity: activityItems }).catch(() => {});
+                    saveActivityToFirebase().catch(() => {});
                 }
             }
 
@@ -2673,7 +2774,8 @@
             async function toggleGoalCompletion(id) {
                 const target = goals.find(goal => goal.id === id);
                 if (!target) return;
-                goals = goals.map(goal => goal.id === id ? { ...goal, completed: !goal.completed, updatedAt: Date.now() } : goal);
+                const now = Date.now();
+                goals = goals.map(goal => goal.id === id ? { ...goal, completed: !goal.completed, completedAt: !goal.completed ? now : null, updatedAt: now } : goal);
                 await saveGoalsToFirebase();
                 renderGoals();
                 updateDashboardGreeting();
@@ -2729,21 +2831,7 @@
                 };
                 goalMessage.textContent = 'Asking Gemini for a tailored goal...';
                 try {
-                    const apiBase = window.location.origin.replace(/:\d+$/, '');
-                    const fallbackPorts = ['3000', '3001', '3002', '3003'];
-                    let apiUrl = `${apiBase}:3000/api/goal-suggest`;
-                    for (const port of fallbackPorts) {
-                        try {
-                            const health = await fetch(`${apiBase}:${port}/health`);
-                            if (health.ok) {
-                                apiUrl = `${apiBase}:${port}/api/goal-suggest`;
-                                break;
-                            }
-                        } catch (e) {
-                            // continue trying other ports
-                        }
-                    }
-                    const response = await fetch(apiUrl, {
+                    const response = await fetch(apiEndpoint('/api/goal-suggest'), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(requestBody)
@@ -2861,11 +2949,18 @@
                 document.getElementById('dailyQuote').textContent = quotes[Math.floor(Math.random() * quotes.length)];
 
                 const completedCount = goals.filter(goal => goal.completed).length;
-                const totalCount = Math.max(4, goals.length);
+                const totalCount = goals.length;
                 const progressPercent = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
 
                 document.getElementById('todayFocus').innerHTML = `<span class="highlight">${completedCount}</span> / ${totalCount}`;
-                document.getElementById('streakCount').textContent = Math.max(1, Math.min(30, 3 + completedCount));
+                const completedDays = new Set(goals.filter(goal => goal.completed && goal.completedAt).map(goal => new Date(goal.completedAt).toDateString()));
+                let streak = 0;
+                const cursor = new Date();
+                while (completedDays.has(cursor.toDateString())) {
+                    streak += 1;
+                    cursor.setDate(cursor.getDate() - 1);
+                }
+                document.getElementById('streakCount').textContent = streak;
 
                 const weekly = Math.max(0, Math.min(100, progressPercent));
                 document.getElementById('weeklyProgress').textContent = weekly;
@@ -2913,6 +3008,7 @@
                 if (page === 'dashboard') {
                     updateDashboardGreeting();
                 }
+                if (page === 'chat') renderChatMessages();
             }
 
             // ============================================================
@@ -2973,21 +3069,7 @@
             // SETTINGS
             // ============================================================
             function loadSettings() {
-                try {
-                    const saved = localStorage.getItem('neoMentorSettings');
-                    if (saved) {
-                        const settings = JSON.parse(saved);
-                        document.getElementById('settingsTheme').value = settings.theme || 'dark';
-                        document.getElementById('settingsLanguage').value = settings.language || 'en';
-                        // Toggle switches
-                        document.querySelectorAll('.settings-item .toggle-switch').forEach((sw, idx) => {
-                            const val = settings.toggles && settings.toggles[idx];
-                            if (val !== undefined) {
-                                sw.classList.toggle('active', val);
-                            }
-                        });
-                    }
-                } catch (e) { /* ignore */ }
+                // Settings are loaded by the mentor_settings Firestore listener.
             }
 
             function saveSettings() {
@@ -2997,12 +3079,7 @@
                     toggles: Array.from(document.querySelectorAll('.settings-item .toggle-switch')).map(el => el
                         .classList.contains('active'))
                 };
-                try {
-                    localStorage.setItem('neoMentorSettings', JSON.stringify(settings));
-                    alert('✅ Settings saved!');
-                } catch (e) {
-                    alert('⚠️ Could not save settings.');
-                }
+                saveUserStateToFirebase({ settings }).then(() => alert('✅ Settings saved to Firebase!'));
             }
 
             function toggleSwitch(el) {
@@ -3043,15 +3120,8 @@
             // LOADING SCREEN
             // ============================================================
             window.addEventListener('load', async function() {
-                loadProfileData();
-                loadActivityItems();
                 applyProfileToUI();
-                if (profileCompleted) {
-                    showPage('dashboard');
-                    updateDashboardGreeting();
-                } else {
-                    showPage('onboarding');
-                }
+                showPage('onboarding');
 
                 ensureFirebase();
                 firebaseAuth?.onAuthStateChanged(async (user) => {
@@ -3063,8 +3133,9 @@
                     profileEmailDisplay.textContent = user.email || 'student@example.com';
                     await loadProfileFromFirebase();
                     await loadGoalsFromFirebase();
-                    profileCompleted = Boolean(profileData.name || profileData.class || profileData.school || profileData.course || profileData.studyHours);
+                    profileCompleted = Boolean(profileData.name);
                     applyProfileToUI();
+                    startRealtimeUserSync();
                     if (profileCompleted) {
                         showPage('dashboard');
                         updateDashboardGreeting();
@@ -3100,6 +3171,7 @@
             window.toggleGoalCompletion = toggleGoalCompletion;
             window.handleGoalSubmit = handleGoalSubmit;
             window.suggestGoalWithAI = suggestGoalWithAI;
+            window.clearChatHistory = clearChatHistory;
 
             // ============================================================
             // KEYBOARD SHORTCUTS
@@ -3127,6 +3199,7 @@
             });
 
             goalForm.addEventListener('submit', handleGoalSubmit);
+            chatForm.addEventListener('submit', handleChatSubmit);
 
             // ============================================================
             // INIT
