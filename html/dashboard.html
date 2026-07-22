@@ -1845,7 +1845,14 @@
                     </div>
                 </div>
 
+                <!-- Today's Goals -->
+                <div class="card">
+                    <div class="card-title"><i class="fas fa-bullseye"></i> Today's Goals</div>
+                    <div id="dashGoalsList" class="goal-list"></div>
+                </div>
+
                 <!-- Daily Time Table -->
+
                 <div class="card">
                     <div class="card-title"><i class="fas fa-clock"></i> Daily Time Table</div>
                     <div id="dailyTimeTable" class="time-table"></div>
@@ -2521,14 +2528,56 @@
                 }
             }
 
+            // ── localStorage helpers for instant offline goal rendering ──
+            function saveGoalsLocally() {
+                try {
+                    if (currentUser) {
+                        localStorage.setItem(`nm_goals_${currentUser.uid}`, JSON.stringify(goals));
+                    }
+                } catch (e) { /* quota or private-mode – silently ignore */ }
+            }
+
+            function loadGoalsLocally() {
+                try {
+                    if (!currentUser) return [];
+                    const raw = localStorage.getItem(`nm_goals_${currentUser.uid}`);
+                    return raw ? JSON.parse(raw) : [];
+                } catch (e) { return []; }
+            }
+
             async function loadGoalsFromFirebase() {
                 if (!ensureFirebase() || !currentUser) return;
+
+                // 1. Show cached goals immediately so the list is never blank
+                const cached = loadGoalsLocally();
+                if (cached.length && !goals.length) {
+                    goals = cached;
+                    renderGoals();
+                }
+
                 try {
-                    const snapshot = await firebaseFirestore.collection('mentor_goals').doc(currentUser.uid).collection('items').get();
-                    goals = snapshot.docs.map(doc => normalizeGoal({ id: doc.id, ...doc.data() })).sort((a, b) => b.updatedAt - a.updatedAt);
+                    const snapshot = await firebaseFirestore
+                        .collection('mentor_goals')
+                        .doc(currentUser.uid)
+                        .collection('items')
+                        .get();
+
+                    if (!snapshot.empty) {
+                        // Overwrite only when Firestore actually has data
+                        goals = snapshot.docs
+                            .map(doc => normalizeGoal({ id: doc.id, ...doc.data() }))
+                            .sort((a, b) => b.updatedAt - a.updatedAt);
+                    } else if (goals.length === 0) {
+                        // Local was empty, stay empty
+                        goals = [];
+                    }
+                    // If snapshot is empty but local has goals, keep the local cache – no overwrite
+
+                    saveGoalsLocally();
                     renderGoals();
                 } catch (e) {
-                    console.error('Could not load goals', e);
+                    console.error('Could not load goals from Firestore, using cache', e);
+                    // Already rendered cached goals above – nothing more to do
                 }
             }
 
@@ -2552,6 +2601,7 @@
                 if (!ensureFirebase() || !currentUser) return;
                 if (firestoreUserUnsubscribe) firestoreUserUnsubscribe();
                 const uid = currentUser.uid;
+
                 const unsubscribers = [
                     firebaseFirestore.collection('mentor_profiles').doc(uid).onSnapshot(snapshot => {
                         if (!snapshot.exists) return;
@@ -2560,39 +2610,63 @@
                         saveProfileData();
                         applyProfileToUI();
                     }, error => setSyncStatus(`Profile sync failed: ${error.code || 'permission denied'}`, 'error')),
+
+                    // ═══════════════════════════════════════════════════════════
+                    // GOALS LISTENER – FIXED
+                    // ═══════════════════════════════════════════════════════════
                     firebaseFirestore.collection('mentor_goals').doc(uid).collection('items').onSnapshot(snapshot => {
-                        goals = snapshot.docs.map(doc => normalizeGoal({ id: doc.id, ...doc.data() })).sort((a, b) => b.updatedAt - a.updatedAt);
+                        // Never overwrite a non-empty local array with an empty server snapshot.
+                        if (snapshot.empty && goals.length > 0) return;
+
+                        goals = snapshot.docs
+                            .map(doc => normalizeGoal({ id: doc.id, ...doc.data() }))
+                            .sort((a, b) => b.updatedAt - a.updatedAt);
+
+                        saveGoalsLocally();
                         renderGoals();
                         updateDashboardGreeting();
                     }, error => setSyncStatus(`Goals sync failed: ${error.code || 'permission denied'}`, 'error')),
+                    // ═══════════════════════════════════════════════════════════
+
                     firebaseFirestore.collection('mentor_activity').doc(uid).onSnapshot(snapshot => {
                         if (!snapshot.exists) return;
                         activityItems = snapshot.data().events || [];
                         saveActivityItems();
                         renderActivity();
                     }, error => setSyncStatus(`Activity sync failed: ${error.code || 'permission denied'}`, 'error')),
-                    firebaseFirestore.collection('mentor_chat').doc(uid).collection('messages').orderBy('createdAt', 'asc').limitToLast(100).onSnapshot(snapshot => {
-                        chatMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        renderChatMessages();
-                    }, error => setSyncStatus(`Chat sync failed: ${error.code || 'permission denied'}`, 'error')),
+
+                    firebaseFirestore.collection('mentor_chat').doc(uid).collection('messages')
+                        .orderBy('createdAt', 'asc').limitToLast(100).onSnapshot(snapshot => {
+                            chatMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            renderChatMessages();
+                        }, error => setSyncStatus(`Chat sync failed: ${error.code || 'permission denied'}`, 'error')),
+
                     firebaseFirestore.collection('mentor_settings').doc(uid).onSnapshot(snapshot => {
                         if (snapshot.exists) applySettings(snapshot.data());
                         setSyncStatus('Firebase connected', '');
                     }, error => setSyncStatus(`Settings sync failed: ${error.code || 'permission denied'}`, 'error'))
                 ];
+
                 firestoreUserUnsubscribe = () => unsubscribers.forEach(unsubscribe => unsubscribe());
             }
 
             async function saveGoalsToFirebase() {
-                if (!ensureFirebase() || !currentUser) return;
+                // Always persist to localStorage first for instant UI
+                saveGoalsLocally();
+
+                if (!ensureFirebase() || !currentUser) return true; // local only is still "success" for UI
+
                 try {
                     const payload = {};
                     goals.forEach(goal => {
                         payload[goal.id] = { ...goal };
                     });
                     await saveUserStateToFirebase({ goals: payload });
+                    return true;
                 } catch (e) {
-                    console.error('Could not save goals', e);
+                    console.error('Could not save goals to Firestore', e);
+                    if (goalMessage) goalMessage.textContent = 'Could not save goals to the cloud. Changes are stored locally.';
+                    return false;
                 }
             }
 
@@ -2604,6 +2678,15 @@
                 // Activity persists through mentor_activity in Firestore only.
             }
 
+            async function saveActivityToFirebase() {
+                if (!ensureFirebase() || !currentUser) return;
+                try {
+                    await saveUserStateToFirebase({ activity: activityItems });
+                } catch (e) {
+                    console.error('Could not save activity to Firestore', e);
+                }
+            }
+
             function escapeHtml(value) {
                 const el = document.createElement('div');
                 el.textContent = String(value || '');
@@ -2613,7 +2696,7 @@
             function renderChatMessages() {
                 if (!chatMessagesEl) return;
                 const messages = chatMessages.length ? chatMessages : [{
-                    id: 'welcome', role: 'assistant', content: `Hi${profileData.name ? ` ${profileData.name}` : ''}! I’m your Neo Mentor. What would you like to work on today?`, createdAt: Date.now()
+                    id: 'welcome', role: 'assistant', content: `Hi${profileData.name ? ` ${profileData.name}` : ''}! I'm your Neo Mentor. What would you like to work on today?`, createdAt: Date.now()
                 }];
                 chatMessagesEl.innerHTML = messages.map(message => {
                     const isUser = message.role === 'user';
@@ -2660,7 +2743,7 @@
                     chatMessages.push({ id: `message-${Date.now()}-error`, role: 'assistant', content: 'I could not reach the AI service right now. Please try again in a moment.', createdAt: Date.now() });
                     const localApi = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                     chatStatus.textContent = localApi
-                        ? 'AI server is not running. Run “npm install” once, then “npm start” in this project.'
+                        ? 'AI server is not running. Run "npm install" once, then "npm start" in this project.'
                         : 'Could not connect to the AI service. Check the deployed /api rewrite and function logs.';
                 }
                 await saveChatMessages();
@@ -2716,22 +2799,45 @@
             }
 
             function renderGoals() {
-                if (!goalsList) return;
-                if (!goals.length) {
-                    goalsList.innerHTML = '<div class="goal-card"><div class="goal-title">No goals yet</div><div class="goal-meta">Create a first goal or ask AI for a suggestion.</div></div>';
-                    return;
+                const dashGoalsList = document.getElementById('dashGoalsList');
+
+                // Render Goals Tab List
+                if (goalsList) {
+                    if (!goals.length) {
+                        goalsList.innerHTML = '<div class="goal-card"><div class="goal-title">No goals yet</div><div class="goal-meta">Create a first goal or ask AI for a suggestion.</div></div>';
+                    } else {
+                        goalsList.innerHTML = goals.map(goal => `
+                            <div class="goal-card">
+                                <div class="goal-title" style="${goal.completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${goal.title}</div>
+                                <div class="goal-meta">${goal.description || 'No extra details yet'} • ${new Date(goal.updatedAt || Date.now()).toLocaleString()}</div>
+                                <div class="goal-actions">
+                                    <button type="button" onclick="editGoal('${goal.id}')"><i class="fas fa-pen"></i> Edit</button>
+                                    <button type="button" onclick="deleteGoal('${goal.id}')"><i class="fas fa-trash"></i> Remove</button>
+                                    <button type="button" onclick="toggleGoalCompletion('${goal.id}')">${goal.completed ? '<i class="fas fa-undo"></i> Not Completed' : '<i class="fas fa-check"></i> Done'}</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
                 }
-                goalsList.innerHTML = goals.map(goal => `
-                    <div class="goal-card">
-                        <div class="goal-title">${goal.title}</div>
-                        <div class="goal-meta">${goal.description || 'No extra details yet'} • ${new Date(goal.updatedAt || Date.now()).toLocaleString()}</div>
-                        <div class="goal-actions">
-                            <button type="button" onclick="editGoal('${goal.id}')"><i class="fas fa-pen"></i> Edit</button>
-                            <button type="button" onclick="deleteGoal('${goal.id}')"><i class="fas fa-trash"></i> Delete</button>
-                            <button type="button" onclick="toggleGoalCompletion('${goal.id}')"><i class="fas fa-check"></i> ${goal.completed ? 'Undo' : 'Done'}</button>
-                        </div>
-                    </div>
-                `).join('');
+
+                // Render Dashboard Tab List
+                if (dashGoalsList) {
+                    if (!goals.length) {
+                        dashGoalsList.innerHTML = '<div class="goal-card"><div class="goal-title">No goals yet</div><div class="goal-meta">Go to the Goals tab to create one.</div></div>';
+                    } else {
+                        dashGoalsList.innerHTML = goals.slice(0, 5).map(goal => `
+                            <div class="goal-card">
+                                <div class="goal-title" style="${goal.completed ? 'text-decoration: line-through; opacity: 0.6;' : ''}">${goal.title}</div>
+                                <div class="goal-meta">${goal.description || 'No extra details yet'}</div>
+                                <div class="goal-actions" style="margin-top: 0.6rem;">
+                                    <button type="button" onclick="editGoal('${goal.id}')"><i class="fas fa-pen"></i> Edit</button>
+                                    <button type="button" onclick="deleteGoal('${goal.id}')"><i class="fas fa-trash"></i> Remove</button>
+                                    <button type="button" onclick="toggleGoalCompletion('${goal.id}')">${goal.completed ? '<i class="fas fa-undo"></i> Not Completed' : '<i class="fas fa-check"></i> Done'}</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
             }
 
             function resetGoalForm() {
@@ -2762,24 +2868,62 @@
             async function deleteGoal(id) {
                 const deletedGoal = goals.find(goal => goal.id === id);
                 goals = goals.filter(goal => goal.id !== id);
-                await saveGoalsToFirebase();
+
+                const saved = await saveGoalsToFirebase();
                 renderGoals();
                 updateDashboardGreeting();
-                if (deletedGoal) {
-                    pushActivity('deleted', deletedGoal.title, 'Removed from your goals');
+
+                if (saved) {
+                    if (deletedGoal) {
+                        pushActivity('deleted', deletedGoal.title, 'Removed from your goals');
+                    }
+                    goalMessage.textContent = 'Goal removed.';
+                } else {
+                    // Restore locally if the cloud delete failed, so UI doesn't lose it permanently
+                    if (deletedGoal) {
+                        goals.push(deletedGoal);
+                        goals.sort((a, b) => b.updatedAt - a.updatedAt);
+                        renderGoals();
+                        goalMessage.textContent = 'Could not delete goal from cloud. Local copy kept.';
+                    }
                 }
-                goalMessage.textContent = 'Goal removed.';
             }
 
             async function toggleGoalCompletion(id) {
                 const target = goals.find(goal => goal.id === id);
                 if (!target) return;
+
                 const now = Date.now();
-                goals = goals.map(goal => goal.id === id ? { ...goal, completed: !goal.completed, completedAt: !goal.completed ? now : null, updatedAt: now } : goal);
-                await saveGoalsToFirebase();
+                const previousCompleted = target.completed;
+                goals = goals.map(goal =>
+                    goal.id === id
+                        ? {
+                              ...goal,
+                              completed: !goal.completed,
+                              completedAt: !goal.completed ? now : null,
+                              updatedAt: now
+                          }
+                        : goal
+                );
+
+                const saved = await saveGoalsToFirebase();
                 renderGoals();
                 updateDashboardGreeting();
-                pushActivity(target.completed ? 'updated' : 'completed', target.title, target.completed ? 'Marked as pending' : 'Completed');
+
+                if (saved) {
+                    pushActivity(
+                        previousCompleted ? 'updated' : 'completed',
+                        target.title,
+                        previousCompleted ? 'Marked as pending' : 'Completed'
+                    );
+                } else {
+                    // Revert local state
+                    goals = goals.map(goal =>
+                        goal.id === id ? { ...goal, completed: previousCompleted, completedAt: previousCompleted ? now : null } : goal
+                    );
+                    renderGoals();
+                    goalMessage.textContent = 'Could not update goal status in cloud. Reverted.';
+                }
             }
 
             async function handleGoalSubmit(e) {
@@ -2788,24 +2932,41 @@
                     goalMessage.textContent = 'Please add a goal title first.';
                     return;
                 }
-                const goal = {
-                    id: editingGoalId || `goal-${Date.now()}`,
-                    title: goalTitleInput.value.trim(),
-                    description: goalDescriptionInput.value.trim(),
-                    completed: false,
-                    createdAt: Date.now(),
-                    updatedAt: Date.now()
-                };
+
+                const now = Date.now();
                 if (editingGoalId) {
-                    goals = goals.map(item => item.id === editingGoalId ? { ...item, ...goal } : item);
-                    pushActivity('updated', goal.title, 'Updated from the dashboard');
+                    // Preserve existing fields (especially completed state) when editing
+                    goals = goals.map(item =>
+                        item.id === editingGoalId
+                            ? {
+                                  ...item,
+                                  title: goalTitleInput.value.trim(),
+                                  description: goalDescriptionInput.value.trim(),
+                                  updatedAt: now
+                              }
+                            : item
+                    );
+                    pushActivity('updated', goalTitleInput.value.trim(), 'Updated from the dashboard');
                 } else {
+                    const goal = {
+                        id: `goal-${now}`,
+                        title: goalTitleInput.value.trim(),
+                        description: goalDescriptionInput.value.trim(),
+                        completed: false,
+                        createdAt: now,
+                        updatedAt: now
+                    };
                     goals.unshift(goal);
                     pushActivity('added', goal.title, 'Saved to your dashboard');
                 }
-                await saveGoalsToFirebase();
+
+                const saved = await saveGoalsToFirebase();
                 renderGoals();
                 updateDashboardGreeting();
+
+                if (saved) {
+                    goalMessage.textContent = editingGoalId ? 'Goal updated! ✅' : 'Goal saved! ✅';
+                }
                 resetGoalForm();
             }
 
@@ -2844,9 +3005,14 @@
                     if (data.description) {
                         goalDescriptionInput.value = data.description;
                     }
-                    goalMessage.textContent = data.rationale || 'Goal suggestion ready.';
+                    // Strip the internal "(AI service fallback)" tag from user-visible text
+                    const rawRationale = data.rationale || 'Goal suggestion ready.';
+                    const isFallback = rawRationale.includes('AI service fallback');
+                    goalMessage.textContent = isFallback
+                        ? rawRationale.replace(/\s*\(AI service fallback\)/gi, '').trim() + ' (AI suggestion unavailable — showing a smart default based on your profile.)'
+                        : rawRationale;
                 } catch (e) {
-                    goalMessage.textContent = `Could not reach AI service: ${e.message}`;
+                    goalMessage.textContent = 'Could not reach the AI service. Check that the server is running on port 3000.';
                 }
             }
 

@@ -191,3 +191,162 @@ Do not design this as a simple chatbot.
 Design it as a scalable AI mentoring platform that can eventually serve thousands of students, schools and coaching institutes.
 
 The architecture should be production-ready, cloud-native, modular and easy to extend in future versions.
+
+
+
+
+# NeoBranium
+
+## Overview
+
+NeoBranium is an AI-powered educational platform designed to help students learn, stay consistent, and achieve their academic goals.
+
+Neo Mentor AI is one module inside the NeoBranium ecosystem.
+
+This project is actively under development.
+
+---
+
+# IMPORTANT INSTRUCTIONS FOR AI AGENTS
+
+If you are an AI assistant editing this project, read these instructions carefully before making any changes.
+
+## DO NOT
+
+- Do NOT redesign the UI.
+- Do NOT change the project architecture.
+- Do NOT create a new Firebase project.
+- Do NOT replace the authentication system.
+- Do NOT create duplicate user profiles.
+- Do NOT create duplicate user accounts.
+- Do NOT rename existing collections unless explicitly requested.
+- Do NOT remove existing functionality.
+- Do NOT delete code without confirmation.
+- Do NOT refactor large parts of the project unless asked.
+- Do NOT introduce unnecessary dependencies.
+- Do NOT convert the project to another framework.
+- Do NOT change the folder structure unnecessarily.
+- Do NOT modify working features just to improve code style.
+
+---
+
+# ALWAYS
+
+- Extend the existing architecture.
+- Reuse existing components whenever possible.
+- Keep code modular.
+- Write clean and well-commented code.
+- Preserve backwards compatibility.
+- Maintain existing design language.
+- Fix bugs without breaking other modules.
+- Keep future scalability in mind.
+
+---
+
+# PROJECT ARCHITECTURE
+
+Platform
+
+NeoBranium
+
+Modules
+
+- Neo Mentor AI
+- Dashboard
+- Goals
+- Profile
+- Settings
+- AI Chat (Coming Soon)
+
+Future
+
+- WhatsApp Mentor
+- Voice Mentor
+- Long-Term Memory
+- Institute Dashboard
+- Analytics
+
+---
+
+# FIREBASE
+
+Use the existing Firebase project.
+
+Authentication must always use the same Firebase UID.
+
+Never create duplicate user accounts.
+
+Collections
+
+users
+
+mentor_profiles
+
+mentor_settings
+
+mentor_goals
+
+mentor_activity
+
+mentor_chat
+
+mentor_memory
+
+---
+
+# DESIGN LANGUAGE
+
+- Dark Theme
+- Glassmorphism
+- Blue/Purple Accent
+- Premium SaaS Style
+- Responsive
+- Smooth Animations
+
+Never redesign completed pages.
+
+---
+
+# CODING RULES
+
+- Prefer editing existing files.
+- Avoid creating unnecessary new files.
+- Keep functions small and reusable.
+- Add comments for important logic.
+- Use meaningful variable names.
+- Preserve compatibility with future modules.
+
+---
+
+# VERSION
+
+Current Version
+
+Neo Mentor AI v1
+
+Current Scope
+
+- Dashboard
+- Goals
+- Profile
+- Settings
+
+Coming Soon
+
+- AI Chat
+- Voice AI
+- WhatsApp
+- Memory System
+- Analytics
+
+---
+
+# BEFORE MAKING CHANGES
+
+If the requested modification could break existing functionality, ask for confirmation first.
+
+If unsure about architecture, preserve the current implementation instead of replacing it.
+
+When possible, improve the existing code instead of rewriting it.
+
+The goal is to build a scalable, production-ready educational platform.

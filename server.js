@@ -61,7 +61,7 @@ app.post('/api/goal-suggest', async (req, res) => {
 
     let data;
     try {
-      const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+      const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
       const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -153,7 +153,7 @@ app.post('/api/chat', async (req, res) => {
       parts: [{ text: String(item.content || '').slice(0, 2000) }]
     })) : [];
     const system = `You are Neo Mentor AI, a supportive long-term academic mentor. Use this student profile: ${JSON.stringify(mentorContext)}. Give practical, accurate study guidance in the student's preferred explanation style. Be concise (under 220 words), encouraging, and do not pretend to have completed work or know facts not provided. Ask one useful follow-up question when needed.`;
-    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
     const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

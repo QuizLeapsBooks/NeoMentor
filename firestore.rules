@@ -1,0 +1,49 @@
+// ============================================================
+// NeoMentor – Firestore Security Rules
+// ============================================================
+// INSTRUCTIONS:
+//   Paste the match blocks below INSIDE NeoBranium's existing
+//   service cloud.firestore { match /databases/{database}/documents { ... } }
+//   block. Do NOT replace the platform's existing rules.
+// ============================================================
+
+// --- Mentor Profiles ---
+match /mentor_profiles/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+// --- Mentor Settings ---
+match /mentor_settings/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+// --- Mentor Activity ---
+match /mentor_activity/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+// --- Mentor Chat (parent doc) ---
+match /mentor_chat/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+// --- Mentor Chat Messages (subcollection) ---
+match /mentor_chat/{userId}/messages/{messageId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+// --- Mentor Goals (parent doc) ---
+match /mentor_goals/{userId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+// --- Mentor Goals Items (subcollection) ---
+match /mentor_goals/{userId}/items/{goalId} {
+  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+}
+
+// --- AI Memory (server-write only via Admin SDK) ---
+match /mentor_memory/{userId} {
+  allow read: if request.auth != null && request.auth.uid == userId;
+  allow write: if false; // Only Firebase Admin SDK (server) can write
+}
