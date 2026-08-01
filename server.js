@@ -1,20 +1,127 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
-let admin = null;
-try {
-  admin = require('firebase-admin');
-  if (!admin.apps.length) admin.initializeApp();
-} catch (error) {
-  // Local development can run without Admin credentials; AI falls back to client context.
-  admin = null;
-}
 
 dotenv.config();
 
+let admin = null;
+try {
+  admin = require('firebase-admin');
+  if (!admin.apps.length) {
+    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        })
+      });
+    } else {
+      throw new Error("Missing Firebase credentials in environment. Falling back to client context.");
+    }
+  }
+} catch (error) {
+  console.error("Firebase initialization failed:", error.message);
+  admin = null;
+}
+
 const app = express();
-app.use(cors());
-app.use(express.json());
+app.set('trust proxy', 1);
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://127.0.0.1:3000',
+  'https://neomentor.onrender.com'
+];
+
+const rateLimitWindowMs = 15 * 60 * 1000;
+const rateLimitMaxRequests = 100;
+const rateLimitStore = new Map();
+
+function rateLimitMiddleware(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const entry = rateLimitStore.get(ip) || { count: 0, start: now };
+
+  if (now - entry.start > rateLimitWindowMs) {
+    entry.count = 0;
+    entry.start = now;
+  }
+
+  entry.count += 1;
+  rateLimitStore.set(ip, entry);
+
+  if (entry.count > rateLimitMaxRequests) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
+  next();
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimitStore.entries()) {
+    if (now - entry.start > rateLimitWindowMs) {
+      rateLimitStore.delete(ip);
+    }
+  }
+}, rateLimitWindowMs);
+
+function verifyFirebaseIdToken(req, res, next) {
+  if (!process.env.GEMINI_API_KEY) {
+    return next();
+  }
+
+  if (!admin) {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(503).json({ error: 'Server authentication is not configured.' });
+    }
+    console.warn('Firebase Admin unavailable; allowing local development request without token.');
+    return next();
+  }
+
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication token is required.' });
+  }
+
+  admin.auth().verifyIdToken(token)
+    .then(decoded => {
+      req.uid = decoded.uid;
+      next();
+    })
+    .catch(error => {
+      console.error('[auth] token verify failed:', error.message);
+      res.status(401).json({ error: 'Invalid authentication token.' });
+    });
+}
+
+app.use(cors({
+  origin: function(origin, callback){
+    if(!origin) return callback(null, true);
+    if(
+      allowedOrigins.indexOf(origin) !== -1 ||
+      origin.startsWith('http://localhost:') ||
+      origin.startsWith('http://127.0.0.1:')
+    ) {
+      return callback(null, true);
+    }
+    console.error('CORS policy violation for origin:', origin);
+    return callback(new Error('CORS policy violation: ' + origin), false);
+  }
+}));
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Permissions-Policy', 'interest-cohort=()');
+  next();
+});
+
+app.use(express.json({ limit: '20kb' }));
+app.use('/api', rateLimitMiddleware);
 
 function createFallbackGoalSuggestion(profile = {}) {
   const subject = profile.favoriteSubject || profile.subject || 'your main subject';
@@ -27,33 +134,25 @@ function createFallbackGoalSuggestion(profile = {}) {
 
 function normalizeGoalSuggestion(parsed = {}, profile = {}) {
   const fallback = createFallbackGoalSuggestion(profile);
-  const isOverComplicated = (text = '') => {
-    const lower = text.toLowerCase();
-    return lower.includes('pyq') || lower.includes('high-weightage') || lower.includes('marking scheme') || lower.includes('official') || lower.includes('chapter') || lower.includes('questions') || lower.includes('tonight') || lower.includes('between') || lower.includes('examiner') || lower.includes('confidence') || lower.includes('practice actual') || lower.includes('board exam');
+  
+  return {
+    title: (typeof parsed.title === 'string' && parsed.title.trim()) ? parsed.title.trim() : fallback.title,
+    description: (typeof parsed.description === 'string' && parsed.description.trim()) ? parsed.description.trim() : fallback.description,
+    rationale: (typeof parsed.rationale === 'string' && parsed.rationale.trim()) ? parsed.rationale.trim() : fallback.rationale,
   };
-
-  const sanitizeText = (text, fallbackText) => {
-    if (typeof text !== 'string') return fallbackText;
-    const cleaned = text.trim().replace(/\s+/g, ' ');
-    if (!cleaned) return fallbackText;
-    if (cleaned.length > 180 || isOverComplicated(cleaned)) return fallbackText;
-    return cleaned;
-  };
-
-  const title = sanitizeText(parsed?.title, fallback.title);
-  const description = sanitizeText(parsed?.description, fallback.description);
-  const rationale = sanitizeText(parsed?.rationale, fallback.rationale);
-
-  return { title, description, rationale };
 }
 
-app.post('/api/goal-suggest', async (req, res) => {
+app.post('/api/goal-suggest', verifyFirebaseIdToken, async (req, res) => {
   try {
     const { profile = {}, prompt = '', existingGoal = '' } = req.body || {};
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      return res.status(500).json({ error: 'Gemini API key is missing.' });
+      const fallback = createFallbackGoalSuggestion(profile);
+      return res.json({
+        ...fallback,
+        rationale: `${fallback.rationale} (AI service is currently unavailable)`
+      });
     }
 
     const systemPrompt = `You are Neo Mentor AI, a supportive study coach for students. Create one simple, realistic daily goal that a normal student can actually follow. Keep it short, friendly, and easy to understand. Make it one small task, not a full plan. Avoid exam jargon, multiple steps, time blocks, technical wording, or overly intense language. Output JSON with title, description, rationale.`;
@@ -61,7 +160,7 @@ app.post('/api/goal-suggest', async (req, res) => {
 
     let data;
     try {
-      const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+      const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
       const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,7 +172,7 @@ app.post('/api/goal-suggest', async (req, res) => {
 
       data = await geminiResponse.json();
       if (!geminiResponse.ok) {
-        throw new Error(data?.error?.message || 'Gemini request failed.');
+        throw new Error(data?.error?.message || 'Request failed.');
       }
     } catch (error) {
       const fallback = createFallbackGoalSuggestion(profile);
@@ -88,14 +187,15 @@ app.post('/api/goal-suggest', async (req, res) => {
     try {
       parsed = JSON.parse(text);
     } catch (e) {
-      parsed = { title: 'Study Focus Block', description: text, rationale: 'Generated by Gemini.' };
+      parsed = { title: 'Study Focus Block', description: text, rationale: 'Generated by NeoMentor.' };
     }
 
     const suggestion = normalizeGoalSuggestion(parsed, profile);
 
     return res.json(suggestion);
   } catch (error) {
-    return res.status(500).json({ error: error.message || 'Server error' });
+    console.error('[goal-suggest] Error:', error.message);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });
 
@@ -106,7 +206,7 @@ function createFallbackChatReply(message, profile = {}) {
   return `Let’s work through that step by step. For ${subject}, start with one small, focused task: identify the part of “${cleanMessage.slice(0, 90)}” that feels hardest, then spend 20 minutes on it. Tell me what you get stuck on and I’ll help you from there.`;
 }
 
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', verifyFirebaseIdToken, async (req, res) => {
   try {
     const { message = '', history = [], profile = {}, uid: requestedUid = '' } = req.body || {};
     const cleanMessage = String(message).trim();
@@ -115,11 +215,8 @@ app.post('/api/chat', async (req, res) => {
 
     let uid = requestedUid;
     let mentorData = { profile, goals: [], settings: {}, activity: [], messages: history, memory: {} };
-    if (admin) {
-      const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-      if (!token) return res.status(401).json({ error: 'Sign in is required.' });
-      const decoded = await admin.auth().verifyIdToken(token);
-      uid = decoded.uid;
+    if (admin && req.uid) {
+      uid = req.uid;
       const db = admin.firestore();
       const [profileDoc, settingsDoc, activityDoc, memoryDoc, goalsSnapshot, messagesSnapshot] = await Promise.all([
         db.collection('mentor_profiles').doc(uid).get(),
@@ -153,7 +250,7 @@ app.post('/api/chat', async (req, res) => {
       parts: [{ text: String(item.content || '').slice(0, 2000) }]
     })) : [];
     const system = `You are Neo Mentor AI, a supportive long-term academic mentor. Use this student profile: ${JSON.stringify(mentorContext)}. Give practical, accurate study guidance in the student's preferred explanation style. Be concise (under 220 words), encouraging, and do not pretend to have completed work or know facts not provided. Ask one useful follow-up question when needed.`;
-    const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const geminiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -173,11 +270,12 @@ app.post('/api/chat', async (req, res) => {
     }
     return res.json({ reply: finalReply });
   } catch (error) {
+    console.error('[chat] Error:', error.message);
     return res.json({ reply: createFallbackChatReply(req.body?.message, req.body?.profile), fallback: true });
   }
 });
 
-app.get('/health', (req, res) => {
+app.get('/healthz', (req, res) => {
   res.json({ ok: true, message: 'Neo Mentor API is running' });
 });
 

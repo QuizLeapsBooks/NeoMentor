@@ -713,7 +713,7 @@
 
                 <div class="form-options">
                     <label><input type="checkbox" checked /> Remember me</label>
-                    <a href="#">Forgot password?</a>
+                    <a href="javascript:void(0)" id="forgotPasswordBtn">Forgot password?</a>
                 </div>
 
                 <button type="submit" class="btn btn-primary">
@@ -728,7 +728,7 @@
                 </div>
 
                 <div class="auth-footer">
-                    Don't have an account? <a href="#" id="switchToRegister">Create one</a>
+                    Don't have an account? <a href="javascript:void(0)" id="switchToRegister">Create one</a>
                 </div>
             </form>
 
@@ -774,7 +774,7 @@
                 </div>
 
                 <div class="form-options">
-                    <label><input type="checkbox" required /> I agree to the <a href="#" style="color:var(--neon-blue);text-decoration:none;">Terms</a> &amp; <a href="#" style="color:var(--neon-blue);text-decoration:none;">Privacy Policy</a></label>
+                    <label><input type="checkbox" required /> I agree to the <a href="terms.html" style="color:var(--neon-blue);text-decoration:none;">Terms</a> &amp; <a href="privacy.html" style="color:var(--neon-blue);text-decoration:none;">Privacy Policy</a></label>
                 </div>
 
                 <button type="submit" class="btn btn-primary">
@@ -789,7 +789,7 @@
                 </div>
 
                 <div class="auth-footer">
-                    Already have an account? <a href="#" id="switchToLogin">Sign in</a>
+                    Already have an account? <a href="javascript:void(0)" id="switchToLogin">Sign in</a>
                 </div>
             </form>
 
@@ -807,6 +807,7 @@
     <!-- ================================================
     JAVASCRIPT
     ================================================ -->
+    <script src="config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -833,6 +834,17 @@
 
             // keep sessions alive across reloads
             auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+            
+            // Check for redirect result from social logins
+            auth.getRedirectResult().then(async (credential) => {
+                if (credential && credential.user) {
+                    await saveUserProfile(credential.user, credential.user.displayName || 'Neo Mentor User');
+                    redirectToDashboard();
+                }
+            }).catch((error) => {
+                const msg = document.getElementById('loginMessage');
+                if (msg) showMessage(msg, `⚠️ Sign-in error: ${error.message}`, 'error');
+            });
 
             // ──────────────────────────────────────────────
             // DOM REFS
@@ -1069,7 +1081,14 @@
                         await saveUserProfile(credential.user, credential.user.displayName || 'Neo Mentor User');
                         redirectToDashboard();
                     } catch (error) {
-                        showMessage(loginMsg, `⚠️ ${error.message || `${providerName} sign-in failed.`}`, 'error');
+                        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user' || error.code === 'auth/network-request-failed') {
+                            // Fallback to redirect
+                            auth.signInWithRedirect(provider);
+                        } else if (error.code === 'auth/account-exists-with-different-credential') {
+                            showMessage(loginMsg, `⚠️ An account already exists with the same email address but different sign-in credentials. Sign in using a provider associated with this email address.`, 'error');
+                        } else {
+                            showMessage(loginMsg, `⚠️ ${error.message || `${providerName} sign-in failed.`}`, 'error');
+                        }
                     } finally {
                         this.disabled = false;
                     }
@@ -1079,7 +1098,7 @@
             // ──────────────────────────────────────────────
             // PASSWORD RESET
             // ──────────────────────────────────────────────
-            document.querySelector('.form-options a[href="#"]')?.addEventListener('click', function(e) {
+            document.getElementById('forgotPasswordBtn')?.addEventListener('click', function(e) {
                 e.preventDefault();
                 const email = document.getElementById('loginEmail').value.trim();
                 if (!email) {

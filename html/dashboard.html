@@ -1459,17 +1459,17 @@
     SIDEBAR
     ============================================================ -->
     <aside class="sidebar" id="sidebar">
-        <a href="#" class="logo">
+        <a href="../index.html" class="logo">
             <i class="fas fa-brain"></i>
             <span>Neo Mentor AI</span>
         </a>
 
         <nav class="sidebar-nav" id="sidebarNav">
-            <a href="#" class="active" data-page="dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
-            <a href="#" data-page="chat"><i class="fas fa-comment-dots"></i> AI Chat</a>
-            <a href="#" data-page="goals"><i class="fas fa-bullseye"></i> Goals</a>
-            <a href="#" data-page="profile"><i class="fas fa-user"></i> Profile</a>
-            <a href="#" data-page="settings"><i class="fas fa-cog"></i> Settings</a>
+            <a href="javascript:void(0)" class="active" data-page="dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="javascript:void(0)" data-page="chat"><i class="fas fa-comment-dots"></i> AI Chat</a>
+            <a href="javascript:void(0)" data-page="goals"><i class="fas fa-bullseye"></i> Goals</a>
+            <a href="javascript:void(0)" data-page="profile"><i class="fas fa-user"></i> Profile</a>
+            <a href="javascript:void(0)" data-page="settings"><i class="fas fa-cog"></i> Settings</a>
         </nav>
 
         <div class="sidebar-footer">
@@ -1806,19 +1806,19 @@
                 <div class="card">
                     <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
                     <div class="quick-actions">
-                        <a href="#" class="quick-action" onclick="suggestGoalWithAI('suggest'); return false;">
+                        <a href="javascript:void(0)" class="quick-action" onclick="suggestGoalWithAI('suggest'); return false;">
                             <i class="fas fa-robot"></i>
                             <span class="label">AI Coach</span>
                         </a>
-                        <a href="#" class="quick-action" onclick="navigateTo('goals'); return false;">
+                        <a href="javascript:void(0)" class="quick-action" onclick="navigateTo('goals'); return false;">
                             <i class="fas fa-bullseye"></i>
                             <span class="label">My Goals</span>
                         </a>
-                        <a href="#" class="quick-action" onclick="navigateTo('profile'); return false;">
+                        <a href="javascript:void(0)" class="quick-action" onclick="navigateTo('profile'); return false;">
                             <i class="fas fa-user"></i>
                             <span class="label">Profile</span>
                         </a>
-                        <a href="#" class="quick-action" onclick="navigateTo('settings'); return false;">
+                        <a href="javascript:void(0)" class="quick-action" onclick="navigateTo('settings'); return false;">
                             <i class="fas fa-cog"></i>
                             <span class="label">Settings</span>
                         </a>
@@ -2153,6 +2153,7 @@
     <!-- ============================================================
     JAVASCRIPT
     ============================================================ -->
+    <script src="../config.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -2711,40 +2712,54 @@
             }
 
             function apiEndpoint(path) {
-                const configuredBase = window.NEOMENTOR_API_BASE;
-                if (configuredBase) return `${configuredBase.replace(/\/$/, '')}${path.replace(/^\/api/, '')}`;
-                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                    return `${window.location.protocol}//${window.location.hostname}:3000${path}`;
-                }
-                return path;
+                const base = window.NEOMENTOR_CONFIG && window.NEOMENTOR_CONFIG.API_BASE_URL 
+                    ? window.NEOMENTOR_CONFIG.API_BASE_URL 
+                    : 'https://neomentor.onrender.com';
+                return `${base.replace(/\/$/, '')}${path}`;
             }
 
             async function handleChatSubmit(event) {
                 event.preventDefault();
                 const text = chatInput.value.trim();
                 if (!text || !currentUser) return;
+                
+                const chatSubmitButton = document.querySelector('#chatForm button');
+                chatInput.disabled = true;
+                if (chatSubmitButton) chatSubmitButton.disabled = true;
+                
                 chatMessages.push({ id: `message-${Date.now()}`, role: 'user', content: text, createdAt: Date.now() });
                 chatInput.value = '';
                 renderChatMessages();
                 chatStatus.textContent = 'Neo Mentor is thinking…';
                 await saveChatMessages();
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+                
                 try {
                     const idToken = await currentUser.getIdToken();
                     const response = await fetch(apiEndpoint('/api/chat'), {
                         method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-                        body: JSON.stringify({ uid: currentUser.uid, message: text, history: chatMessages.slice(-10), profile: profileData })
+                        body: JSON.stringify({ uid: currentUser.uid, message: text, history: chatMessages.slice(-10), profile: profileData }),
+                        signal: controller.signal
                     });
                     const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'Unable to get an answer.');
+                    if (!response.ok) throw new Error(data.message || data.error || 'Unable to get an answer.');
                     chatMessages.push({ id: `message-${Date.now()}-mentor`, role: 'assistant', content: data.reply, createdAt: Date.now() });
                     chatStatus.textContent = data.fallback ? 'AI service is unavailable; showing a basic mentor response.' : 'Chat history is saved securely to your account.';
                     pushActivity('chat', 'AI mentor conversation', 'New chat response saved');
                 } catch (error) {
                     chatMessages.push({ id: `message-${Date.now()}-error`, role: 'assistant', content: 'I could not reach the AI service right now. Please try again in a moment.', createdAt: Date.now() });
-                    const localApi = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                    chatStatus.textContent = localApi
-                        ? 'AI server is not running. Run "npm install" once, then "npm start" in this project.'
-                        : 'Could not connect to the AI service. Check the deployed /api rewrite and function logs.';
+                    if (error.name === 'AbortError') {
+                        chatStatus.textContent = 'Request timed out. The server might be waking up from sleep. Please try again.';
+                    } else {
+                        chatStatus.textContent = 'Could not connect to the AI service. Check the deployed /api rewrite and function logs.';
+                    }
+                } finally {
+                    clearTimeout(timeoutId);
+                    chatInput.disabled = false;
+                    if (chatSubmitButton) chatSubmitButton.disabled = false;
+                    chatInput.focus();
                 }
                 await saveChatMessages();
                 renderChatMessages();
@@ -2990,15 +3005,27 @@
                     prompt: mode === 'refine' && currentGoal ? `Refine this goal to be more specific and actionable: ${currentGoal}. ${promptText}` : promptText,
                     existingGoal: currentGoal
                 };
-                goalMessage.textContent = 'Asking Gemini for a tailored goal...';
+                
+                goalMessage.textContent = 'Asking NeoMentor for a tailored goal...';
+                goalTitleInput.disabled = true;
+                goalDescriptionInput.disabled = true;
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+                
                 try {
+                    const idToken = await currentUser.getIdToken();
                     const response = await fetch(apiEndpoint('/api/goal-suggest'), {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(requestBody)
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${idToken}`
+                        },
+                        body: JSON.stringify(requestBody),
+                        signal: controller.signal
                     });
                     const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'AI request failed');
+                    if (!response.ok) throw new Error(data.message || data.error || 'AI request failed');
                     if (data.title) {
                         goalTitleInput.value = data.title;
                     }
@@ -3012,7 +3039,15 @@
                         ? rawRationale.replace(/\s*\(AI service fallback\)/gi, '').trim() + ' (AI suggestion unavailable — showing a smart default based on your profile.)'
                         : rawRationale;
                 } catch (e) {
-                    goalMessage.textContent = 'Could not reach the AI service. Check that the server is running on port 3000.';
+                    if (e.name === 'AbortError') {
+                        goalMessage.textContent = 'Request timed out. The server might be waking up from sleep. Please try again.';
+                    } else {
+                        goalMessage.textContent = 'Could not connect to the AI service. Please check your network connection.';
+                    }
+                } finally {
+                    clearTimeout(timeoutId);
+                    goalTitleInput.disabled = false;
+                    goalDescriptionInput.disabled = false;
                 }
             }
 
