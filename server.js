@@ -32,7 +32,10 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5000',
   'http://127.0.0.1:3000',
-  'https://neomentor.onrender.com'
+  'https://neomentor.onrender.com',
+  'https://quizleapsbooks.github.io',
+  'https://neomentor.web.app',
+  'https://neomentor.firebaseapp.com'
 ];
 
 const rateLimitWindowMs = 15 * 60 * 1000;
