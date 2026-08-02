@@ -1187,6 +1187,165 @@
         }
 
         /* ============================================================
+           CALENDAR PAGE & MODAL
+           ============================================================ */
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+        .calendar-header h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            padding-bottom: 0.5rem;
+        }
+        .calendar-day {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.8rem;
+            padding: 0.8rem;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+        .calendar-day:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .calendar-day.empty {
+            background: transparent;
+            border-color: transparent;
+            cursor: default;
+        }
+        .calendar-day.empty:hover {
+            background: transparent;
+            border-color: transparent;
+        }
+        .calendar-day .day-num {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: auto;
+        }
+        .calendar-day.today .day-num {
+            color: var(--neon-blue);
+        }
+        .calendar-day.join-date .day-num::after {
+            content: ' 🎉';
+            font-size: 0.7rem;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            align-self: flex-end;
+            margin-top: 0.5rem;
+        }
+        .status-green { background: #2ecc71; box-shadow: 0 0 8px rgba(46, 204, 113, 0.5); }
+        .status-red { background: #e74c3c; box-shadow: 0 0 8px rgba(231, 76, 60, 0.5); }
+        .status-orange { background: #f39c12; box-shadow: 0 0 8px rgba(243, 156, 18, 0.5); }
+        .status-none { background: rgba(255, 255, 255, 0.1); }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            background: var(--bg-card-solid);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-card);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow-card);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        .modal-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        .modal-close:hover {
+            color: #fff;
+            transform: scale(1.1);
+        }
+        .modal-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .day-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .day-stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0.8rem;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .day-stat-card .d-val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-blue);
+        }
+        .day-stat-card .d-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.3rem;
+        }
+
+        /* ============================================================
            LOADING SCREEN
            ============================================================ */
         #loading-screen {
@@ -1466,6 +1625,7 @@
 
         <nav class="sidebar-nav" id="sidebarNav">
             <a href="javascript:void(0)" class="active" data-page="dashboard"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="javascript:void(0)" data-page="calendar"><i class="fas fa-calendar-alt"></i> Calendar</a>
             <a href="javascript:void(0)" data-page="chat"><i class="fas fa-comment-dots"></i> AI Chat</a>
             <a href="javascript:void(0)" data-page="goals"><i class="fas fa-bullseye"></i> Goals</a>
             <a href="javascript:void(0)" data-page="profile"><i class="fas fa-user"></i> Profile</a>
@@ -2148,7 +2308,77 @@
             </div>
         </div>
 
+        <!-- ==========================================================
+        CALENDAR
+        ========================================================== -->
+        <div class="page-section" id="page-calendar">
+            <div class="card">
+                <div class="calendar-header">
+                    <button class="btn btn-outline btn-sm" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <h3 id="calendarMonthTitle">August 2026</h3>
+                    <button class="btn btn-outline btn-sm" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Days will be injected here -->
+                </div>
+            </div>
+        </div>
+
     </main>
+
+    <!-- ============================================================
+    DAY MODAL
+    ============================================================ -->
+    <div class="modal-overlay" id="dayModalOverlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeDayModal()"><i class="fas fa-times"></i></button>
+            <div class="modal-title" id="dayModalTitle"><i class="fas fa-calendar-day"></i> <span>August 1, 2026</span></div>
+            
+            <div id="dayModalLoading" style="text-align:center; padding: 2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--neon-blue);"></i>
+                <p style="margin-top:1rem; color:var(--text-secondary);">Loading data for this day...</p>
+            </div>
+            
+            <div id="dayModalData" class="hidden">
+                <div class="day-stats-grid">
+                    <div class="day-stat-card">
+                        <div class="d-val" id="dayModalCreated">0</div>
+                        <div class="d-label">Goals Created</div>
+                    </div>
+                    <div class="day-stat-card">
+                        <div class="d-val" id="dayModalCompleted" style="color: #2ecc71;">0</div>
+                        <div class="d-label">Goals Completed</div>
+                    </div>
+                    <div class="day-stat-card">
+                        <div class="d-val" id="dayModalPending" style="color: #f39c12;">0</div>
+                        <div class="d-label">Pending Goals</div>
+                    </div>
+                    <div class="day-stat-card">
+                        <div class="d-val" id="dayModalPercent">0%</div>
+                        <div class="d-label">Completion %</div>
+                    </div>
+                </div>
+                <div class="day-stats-grid" style="margin-top:1rem;">
+                    <div class="day-stat-card" style="grid-column: 1 / -1;">
+                        <div class="d-val" id="dayModalChats" style="font-size:1.2rem; color:var(--purple-accent);">0</div>
+                        <div class="d-label">AI Chats Count</div>
+                    </div>
+                </div>
+                <div style="margin-top:1.5rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">
+                    Last Activity: <span id="dayModalLastActivity" style="color:var(--text-secondary);">None</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ============================================================
     JAVASCRIPT
@@ -2200,6 +2430,8 @@
             let goals = [];
             let activityItems = [];
             let chatMessages = [];
+            let calendarCache = {};
+            let currentCalendarDate = new Date();
             let userSyncRef = null;
             let firestoreUserUnsubscribe = null;
             let editingGoalId = null;
@@ -2692,6 +2924,219 @@
                 const el = document.createElement('div');
                 el.textContent = String(value || '');
                 return el.innerHTML;
+            }
+
+            // ============================================================
+            // SMART STUDY CALENDAR
+            // ============================================================
+            function initCalendar() {
+                renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+            }
+
+            function changeMonth(delta) {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+                renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+            }
+
+            async function renderCalendar(year, month) {
+                const titleEl = document.getElementById('calendarMonthTitle');
+                const gridEl = document.getElementById('calendarGrid');
+                if (!titleEl || !gridEl) return;
+
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                titleEl.textContent = `${monthNames[month]} ${year}`;
+
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const today = new Date();
+                
+                let userJoinDate = null;
+                if (profileData && profileData.updatedAt) {
+                    userJoinDate = new Date(profileData.updatedAt?.toMillis ? profileData.updatedAt.toMillis() : Date.now());
+                }
+
+                let html = '';
+                for (let i = 0; i < firstDay; i++) {
+                    html += '<div class="calendar-day empty"></div>';
+                }
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+                    const isJoinDate = userJoinDate && userJoinDate.getFullYear() === year && userJoinDate.getMonth() === month && userJoinDate.getDate() === d;
+                    
+                    html += `
+                        <div class="calendar-day ${isToday ? 'today' : ''} ${isJoinDate ? 'join-date' : ''}" onclick="openDayModal(${year}, ${month}, ${d})">
+                            <div class="day-num">${d}</div>
+                            <div class="status-dot status-none" id="cal-status-${year}-${month}-${d}"></div>
+                        </div>
+                    `;
+                }
+                gridEl.innerHTML = html;
+
+                await loadMonthDataForCalendar(year, month);
+            }
+
+            async function loadMonthDataForCalendar(year, month) {
+                const cacheKey = `${year}-${month}`;
+                if (calendarCache[cacheKey]) {
+                    applyMonthDataToCalendar(year, month, calendarCache[cacheKey]);
+                    return;
+                }
+
+                if (!ensureFirebase() || !currentUser) return;
+                
+                const startOfMonth = new Date(year, month, 1).getTime();
+                const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999).getTime();
+
+                const monthData = {};
+
+                try {
+                    const snapshot = await firebaseFirestore.collection('mentor_goals')
+                        .doc(currentUser.uid).collection('items')
+                        .where('updatedAt', '>=', firebase.firestore.Timestamp.fromMillis(startOfMonth))
+                        .where('updatedAt', '<=', firebase.firestore.Timestamp.fromMillis(endOfMonth))
+                        .get();
+                    
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const upTime = data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now();
+                        const dateObj = new Date(upTime);
+                        const d = dateObj.getDate();
+                        if (dateObj.getFullYear() === year && dateObj.getMonth() === month) {
+                            if (!monthData[d]) monthData[d] = { goals: [], activity: [] };
+                            monthData[d].goals.push(data);
+                        }
+                    });
+
+                    activityItems.forEach(item => {
+                        const dateObj = new Date(item.time);
+                        if (dateObj.getFullYear() === year && dateObj.getMonth() === month) {
+                            const d = dateObj.getDate();
+                            if (!monthData[d]) monthData[d] = { goals: [], activity: [] };
+                            monthData[d].activity.push(item);
+                        }
+                    });
+
+                    calendarCache[cacheKey] = monthData;
+                    applyMonthDataToCalendar(year, month, monthData);
+                } catch (error) {
+                    console.error("Error loading month data for calendar", error);
+                }
+            }
+
+            function applyMonthDataToCalendar(year, month, monthData) {
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const statusDot = document.getElementById(`cal-status-${year}-${month}-${d}`);
+                    if (!statusDot) continue;
+
+                    const dayData = monthData[d];
+                    if (!dayData) {
+                        statusDot.className = 'status-dot status-none';
+                        continue;
+                    }
+
+                    const goals = dayData.goals || [];
+                    const activity = dayData.activity || [];
+
+                    let hasGoals = goals.length > 0;
+                    let hasCompleted = goals.some(g => g.completed);
+                    let hasActivity = activity.length > 0;
+
+                    if (hasGoals && hasCompleted) {
+                        statusDot.className = 'status-dot status-green';
+                    } else if (hasGoals && !hasCompleted) {
+                        statusDot.className = 'status-dot status-red';
+                    } else if (!hasGoals && hasActivity) {
+                        statusDot.className = 'status-dot status-orange';
+                    } else {
+                        statusDot.className = 'status-dot status-none';
+                    }
+                }
+            }
+
+            async function openDayModal(year, month, day) {
+                const overlay = document.getElementById('dayModalOverlay');
+                const title = document.getElementById('dayModalTitle');
+                const loading = document.getElementById('dayModalLoading');
+                const dataDiv = document.getElementById('dayModalData');
+                
+                if (!overlay) return;
+
+                const dateObj = new Date(year, month, day);
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                title.innerHTML = `<i class="fas fa-calendar-day"></i> <span>${monthNames[month]} ${day}, ${year}</span>`;
+
+                overlay.classList.add('active');
+                loading.classList.remove('hidden');
+                dataDiv.classList.add('hidden');
+
+                if (!ensureFirebase() || !currentUser) {
+                    loading.innerHTML = "Please sign in to view data.";
+                    return;
+                }
+
+                const startOfDay = new Date(year, month, day, 0, 0, 0, 0).getTime();
+                const endOfDay = new Date(year, month, day, 23, 59, 59, 999).getTime();
+
+                let goalsCreated = 0;
+                let goalsCompleted = 0;
+                let pendingGoals = 0;
+                let aiChats = 0;
+                let lastActivityTime = null;
+
+                try {
+                    const goalsSnapshot = await firebaseFirestore.collection('mentor_goals')
+                        .doc(currentUser.uid).collection('items')
+                        .where('updatedAt', '>=', firebase.firestore.Timestamp.fromMillis(startOfDay))
+                        .where('updatedAt', '<=', firebase.firestore.Timestamp.fromMillis(endOfDay))
+                        .get();
+
+                    goalsSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        goalsCreated++;
+                        if (data.completed) {
+                            goalsCompleted++;
+                        } else {
+                            pendingGoals++;
+                        }
+                    });
+
+                    const chatSnapshot = await firebaseFirestore.collection('mentor_chat')
+                        .doc(currentUser.uid).collection('messages')
+                        .where('createdAt', '>=', startOfDay)
+                        .where('createdAt', '<=', endOfDay)
+                        .get();
+                    
+                    aiChats = chatSnapshot.size;
+
+                    const dayActivities = activityItems.filter(item => item.time >= startOfDay && item.time <= endOfDay);
+                    if (dayActivities.length > 0) {
+                        lastActivityTime = Math.max(...dayActivities.map(a => a.time));
+                    }
+
+                    document.getElementById('dayModalCreated').textContent = goalsCreated;
+                    document.getElementById('dayModalCompleted').textContent = goalsCompleted;
+                    document.getElementById('dayModalPending').textContent = pendingGoals;
+                    
+                    const percent = goalsCreated === 0 ? 0 : Math.round((goalsCompleted / goalsCreated) * 100);
+                    document.getElementById('dayModalPercent').textContent = `${percent}%`;
+                    
+                    document.getElementById('dayModalChats').textContent = aiChats;
+                    
+                    document.getElementById('dayModalLastActivity').textContent = lastActivityTime ? new Date(lastActivityTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'None';
+
+                    loading.classList.add('hidden');
+                    dataDiv.classList.remove('hidden');
+
+                } catch (error) {
+                    console.error("Error loading day details", error);
+                    loading.innerHTML = "Error loading data.";
+                }
+            }
+
+            function closeDayModal() {
+                const overlay = document.getElementById('dayModalOverlay');
+                if (overlay) overlay.classList.remove('active');
             }
 
             function renderChatMessages() {
@@ -3210,6 +3655,11 @@
                     updateDashboardGreeting();
                 }
                 if (page === 'chat') renderChatMessages();
+                if (page === 'calendar') {
+                    if (Object.keys(calendarCache).length === 0) {
+                        initCalendar();
+                    }
+                }
             }
 
             // ============================================================
@@ -3353,26 +3803,41 @@
                 document.querySelectorAll('#profileForm input, #profileForm select').forEach(el => el.disabled = true);
             });
 
+            async function logout() {
+                if (window.firebase && typeof firebaseAuth !== 'undefined') {
+                    try {
+                        await firebaseAuth.signOut();
+                        window.location.href = '../index.html';
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    }
+                } else {
+                    window.location.href = '../index.html';
+                }
+            }
+
             // ============================================================
             // EXPOSE GLOBALS (for inline onclick)
             // ============================================================
+            window.toggleSidebar = toggleSidebar;
+            window.navigateTo = navigateTo;
+            window.goToStep = goToStep;
             window.nextStep = nextStep;
             window.prevStep = prevStep;
-            window.goToStep = goToStep;
             window.submitOnboarding = submitOnboarding;
-            window.navigateTo = navigateTo;
+            window.logout = logout;
             window.toggleProfileEdit = toggleProfileEdit;
             window.saveProfile = saveProfile;
-            window.saveSettings = saveSettings;
-            window.toggleSwitch = toggleSwitch;
-            window.toggleSidebar = toggleSidebar;
-            window.closeSidebar = closeSidebar;
+            window.suggestGoalWithAI = suggestGoalWithAI;
             window.editGoal = editGoal;
             window.deleteGoal = deleteGoal;
             window.toggleGoalCompletion = toggleGoalCompletion;
             window.handleGoalSubmit = handleGoalSubmit;
             window.suggestGoalWithAI = suggestGoalWithAI;
             window.clearChatHistory = clearChatHistory;
+            window.changeMonth = changeMonth;
+            window.openDayModal = openDayModal;
+            window.closeDayModal = closeDayModal;
 
             // ============================================================
             // KEYBOARD SHORTCUTS
