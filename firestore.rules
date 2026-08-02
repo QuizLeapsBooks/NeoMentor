@@ -1,49 +1,131 @@
-// ============================================================
-// NeoMentor – Firestore Security Rules
-// ============================================================
-// INSTRUCTIONS:
-//   Paste the match blocks below INSIDE NeoBranium's existing
-//   service cloud.firestore { match /databases/{database}/documents { ... } }
-//   block. Do NOT replace the platform's existing rules.
-// ============================================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
 
-// --- Mentor Profiles ---
-match /mentor_profiles/{userId} {
-  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
-}
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
 
-// --- Mentor Settings ---
-match /mentor_settings/{userId} {
-  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
-}
+    // ==========================
+    // Existing Users
+    // ==========================
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
 
-// --- Mentor Activity ---
-match /mentor_activity/{userId} {
-  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
-}
+      match /{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+    }
 
-// --- Mentor Chat (parent doc) ---
-match /mentor_chat/{userId} {
-  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
-}
+    // ==========================
+    // Mentor Profile
+    // ==========================
+    match /mentor_profiles/{userId} {
+      allow read, write: if isOwner(userId);
+    }
 
-// --- Mentor Chat Messages (subcollection) ---
-match /mentor_chat/{userId}/messages/{messageId} {
-  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
-}
+    // ==========================
+    // Mentor Settings
+    // ==========================
+    match /mentor_settings/{userId} {
+      allow read, write: if isOwner(userId);
+    }
 
-// --- Mentor Goals (parent doc) ---
-match /mentor_goals/{userId} {
-  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
-}
+    // ==========================
+    // Mentor Activity
+    // ==========================
+    match /mentor_activity/{userId} {
+      allow read, write: if isOwner(userId);
+    }
 
-// --- Mentor Goals Items (subcollection) ---
-match /mentor_goals/{userId}/items/{goalId} {
-  allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
-}
+    // ==========================
+    // Mentor Memory
+    // ==========================
+    match /mentor_memory/{userId} {
+      allow read, write: if isOwner(userId);
+    }
 
-// --- AI Memory (server-write only via Admin SDK) ---
-match /mentor_memory/{userId} {
-  allow read: if request.auth != null && request.auth.uid == userId;
-  allow write: if false; // Only Firebase Admin SDK (server) can write
+    // ==========================
+    // Mentor Goals
+    // ==========================
+    match /mentor_goals/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /items/{goalId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ==========================
+    // Mentor Chat
+    // ==========================
+    match /mentor_chat/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /messages/{messageId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ==========================
+    // Mentor Notifications
+    // ==========================
+    match /mentor_notifications/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /items/{notificationId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ==========================
+    // Mentor Daily Reflections
+    // ==========================
+    match /mentor_reflections/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /items/{reflectionId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ==========================
+    // Mentor Calendar (Future)
+    // ==========================
+    match /mentor_calendar/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /days/{dayId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ==========================
+    // Mentor Analytics (Future)
+    // ==========================
+    match /mentor_analytics/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ==========================
+    // Existing Reactions
+    // ==========================
+    match /reactions/{noteId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ==========================
+    // AI Board (Server Only)
+    // ==========================
+    match /aiboard_sessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    // ==========================
+    // WhatsApp Queue (Server Only)
+    // ==========================
+    match /whatsapp_queue/{docId} {
+      allow read, write: if false;
+    }
+  }
 }

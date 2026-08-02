@@ -295,6 +295,94 @@
             white-space: nowrap;
         }
 
+        .notification-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.2rem;
+            height: 1.2rem;
+            padding: 0 0.28rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--purple-accent));
+            color: #fff;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            margin-left: 0.45rem;
+        }
+
+        .notification-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+            margin-top: 0.9rem;
+        }
+
+        .notification-item {
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+            border-radius: 1rem;
+            padding: 0.8rem 0.9rem;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .notification-item.unread {
+            border-color: rgba(77, 143, 255, 0.35);
+            box-shadow: inset 0 0 0 1px rgba(77, 143, 255, 0.18);
+        }
+
+        .notification-item .notification-title {
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .notification-item .notification-body {
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+        }
+
+        .notification-item .notification-meta {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .notification-empty {
+            padding: 0.85rem 0.9rem;
+            border-radius: 1rem;
+            background: rgba(255,255,255,0.03);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .notification-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+
+        .notification-toolbar {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .notification-meta-inline {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+            color: var(--text-secondary);
+            font-size: 0.82rem;
+        }
+
         /* Sidebar toggle (hamburger) */
         .sidebar-toggle {
             position: fixed;
@@ -902,6 +990,95 @@
         .goal-form textarea {
             min-height: 88px;
             resize: vertical;
+        }
+        .reflection-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.9rem 1.2rem;
+        }
+        .reflection-summary {
+            display: grid;
+            gap: 0.7rem;
+            margin-top: 1rem;
+        }
+        .reflection-summary-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 0.9rem 1rem;
+        }
+        .reflection-history {
+            display: grid;
+            gap: 0.7rem;
+            margin-top: 0.65rem;
+        }
+        .reflection-history-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 0.8rem 0.95rem;
+        }
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .analytics-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 1rem;
+        }
+        .analytics-card h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-primary);
+        }
+        .analytics-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.45rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.9rem;
+        }
+        .analytics-metric:last-child {
+            border-bottom: none;
+        }
+        .analytics-metric .value {
+            color: var(--neon-blue);
+            font-weight: 600;
+        }
+        .analytics-chart {
+            width: 100%;
+            height: 180px;
+            margin-top: 0.4rem;
+        }
+        .analytics-heatmap {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 0.35rem;
+            margin-top: 0.6rem;
+        }
+        .analytics-heatmap .day-cell {
+            aspect-ratio: 1;
+            border-radius: 0.45rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .analytics-heatmap .day-cell.active {
+            background: linear-gradient(135deg, var(--neon-blue), var(--purple-accent));
+        }
+        .reflection-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(77, 143, 255, 0.12);
+            color: var(--text-primary);
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            margin-top: 0.35rem;
         }
         .goal-list {
             display: grid;
@@ -1628,6 +1805,7 @@
             <a href="javascript:void(0)" data-page="calendar"><i class="fas fa-calendar-alt"></i> Calendar</a>
             <a href="javascript:void(0)" data-page="chat"><i class="fas fa-comment-dots"></i> AI Chat</a>
             <a href="javascript:void(0)" data-page="goals"><i class="fas fa-bullseye"></i> Goals</a>
+            <a href="javascript:void(0)" data-page="analytics"><i class="fas fa-chart-line"></i> Analytics</a>
             <a href="javascript:void(0)" data-page="profile"><i class="fas fa-user"></i> Profile</a>
             <a href="javascript:void(0)" data-page="settings"><i class="fas fa-cog"></i> Settings</a>
         </nav>
@@ -1936,8 +2114,11 @@
                     <p>Here's your study overview for today</p>
                     <div class="quote" id="dailyQuote">"The secret of getting ahead is getting started." — Mark Twain</div>
                 </div>
-                <div>
+                <div style="display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center;">
                     <button class="btn btn-outline btn-sm" onclick="navigateTo('profile')"><i class="fas fa-user"></i> Profile</button>
+                    <button class="btn btn-outline btn-sm" id="notificationCenterButton" onclick="requestNotificationPermission()">
+                        <i class="fas fa-bell"></i> Alerts <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                    </button>
                 </div>
             </div>
 
@@ -2016,6 +2197,69 @@
                 <div class="card">
                     <div class="card-title"><i class="fas fa-clock"></i> Daily Time Table</div>
                     <div id="dailyTimeTable" class="time-table"></div>
+                </div>
+
+                <!-- Daily Reflection -->
+                <div class="card full-width">
+                    <div class="card-title"><i class="fas fa-pen-to-square"></i> Daily Reflection</div>
+                    <form id="reflectionForm" class="goal-form">
+                        <div class="reflection-grid">
+                            <div class="form-group full-width">
+                                <label>How was today's study?</label>
+                                <textarea id="reflectionStudySummary" placeholder="Describe your study session briefly." required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Hours studied</label>
+                                <input type="number" id="reflectionHours" min="0" step="0.5" placeholder="e.g. 3.5" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Mood</label>
+                                <select id="reflectionMood">
+                                    <option value="Focused">Focused</option>
+                                    <option value="Calm">Calm</option>
+                                    <option value="Energized">Energized</option>
+                                    <option value="Tired">Tired</option>
+                                    <option value="Stressed">Stressed</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Biggest achievement</label>
+                                <input type="text" id="reflectionAchievement" placeholder="One win from today" />
+                            </div>
+                            <div class="form-group">
+                                <label>Biggest distraction</label>
+                                <input type="text" id="reflectionDistraction" placeholder="What pulled your focus away" />
+                            </div>
+                            <div class="form-group">
+                                <label>Tomorrow's priority</label>
+                                <input type="text" id="reflectionPriority" placeholder="One thing to tackle first" />
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Save Reflection</button>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="clearReflectionForm()"><i class="fas fa-eraser"></i> Clear</button>
+                        </div>
+                        <div class="goal-message" id="reflectionMessage">Capture your daily reflection to build momentum.</div>
+                    </form>
+                    <div id="reflectionSummary" class="reflection-summary"></div>
+                    <div id="reflectionHistory" class="reflection-history"></div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="card full-width">
+                    <div class="card-title"><i class="fas fa-bell"></i> Notifications</div>
+                    <div class="notification-summary">
+                        <div id="notificationPermissionHint">Browser alerts are off. Enable them to receive study reminders.</div>
+                        <div class="notification-toolbar">
+                            <button class="btn btn-outline btn-sm" onclick="requestNotificationPermission()"><i class="fas fa-bell"></i> Enable Alerts</button>
+                            <button class="btn btn-outline btn-sm" onclick="markAllNotificationsRead()"><i class="fas fa-check"></i> Mark all read</button>
+                        </div>
+                        <div class="notification-meta-inline">
+                            <span id="notificationUnreadCount">0 unread</span>
+                            <span id="notificationLastActivity">No reminders yet</span>
+                        </div>
+                    </div>
+                    <div id="notificationHistoryList" class="notification-list"></div>
                 </div>
 
                 <!-- Recent Activity -->
@@ -2224,6 +2468,41 @@
         <!-- ==========================================================
         SETTINGS PAGE
         ========================================================== -->
+        <div class="page-section" id="page-analytics">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chart-line"></i> Analytics</div>
+                <div id="analyticsSummary" class="analytics-grid"></div>
+                <div class="analytics-grid" style="margin-top:1rem;">
+                    <div class="analytics-card">
+                        <h4>Daily Completion</h4>
+                        <svg id="dailyChart" class="analytics-chart" viewBox="0 0 320 180" preserveAspectRatio="none"></svg>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Weekly Completion</h4>
+                        <svg id="weeklyChart" class="analytics-chart" viewBox="0 0 320 180" preserveAspectRatio="none"></svg>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Monthly Completion</h4>
+                        <svg id="monthlyChart" class="analytics-chart" viewBox="0 0 320 180" preserveAspectRatio="none"></svg>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Subject Distribution</h4>
+                        <svg id="subjectChart" class="analytics-chart" viewBox="0 0 320 180" preserveAspectRatio="none"></svg>
+                    </div>
+                </div>
+                <div class="analytics-grid" style="margin-top:1rem;">
+                    <div class="analytics-card">
+                        <h4>Calendar Heatmap</h4>
+                        <div id="heatmap" class="analytics-heatmap"></div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Study Insights</h4>
+                        <div id="insightList" class="reflection-summary"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="page-section" id="page-settings">
             <h2 style="font-family:'Space Grotesk',sans-serif;margin-bottom:1.5rem;">⚙️ Settings</h2>
 
@@ -2435,6 +2714,12 @@
             let userSyncRef = null;
             let firestoreUserUnsubscribe = null;
             let editingGoalId = null;
+            let notificationHistory = [];
+            let notificationSchedulerTimer = null;
+            let reminderState = {};
+            let notificationSettings = { studyReminders: true, goalAlerts: true };
+            let reflectionEntries = [];
+            let analyticsData = { daily: [], weekly: [], monthly: [], subjects: [], heatmap: [] };
 
             // ============================================================
             // DOM REFS
@@ -2467,6 +2752,22 @@
             const chatInput = document.getElementById('chatInput');
             const chatStatus = document.getElementById('chatStatus');
             const syncStatus = document.getElementById('syncStatus');
+            const notificationBadge = document.getElementById('notificationBadge');
+            const notificationUnreadCount = document.getElementById('notificationUnreadCount');
+            const notificationLastActivity = document.getElementById('notificationLastActivity');
+            const notificationHistoryList = document.getElementById('notificationHistoryList');
+            const notificationPermissionHint = document.getElementById('notificationPermissionHint');
+            const reflectionForm = document.getElementById('reflectionForm');
+            const reflectionMessage = document.getElementById('reflectionMessage');
+            const reflectionSummary = document.getElementById('reflectionSummary');
+            const reflectionHistory = document.getElementById('reflectionHistory');
+            const analyticsSummary = document.getElementById('analyticsSummary');
+            const dailyChart = document.getElementById('dailyChart');
+            const weeklyChart = document.getElementById('weeklyChart');
+            const monthlyChart = document.getElementById('monthlyChart');
+            const subjectChart = document.getElementById('subjectChart');
+            const heatmap = document.getElementById('heatmap');
+            const insightList = document.getElementById('insightList');
 
             // ============================================================
             // INIT
@@ -2479,6 +2780,8 @@
                 renderGoals();
                 renderActivity();
                 renderChatMessages();
+                initializeNotifications();
+                initializeReflectionModule();
 
                 // Sidebar toggle
                 sidebarToggle.addEventListener('click', toggleSidebar);
@@ -2724,6 +3027,12 @@
                         Object.entries(changes.goals).forEach(([id, goal]) => batch.set(db.collection('mentor_goals').doc(uid).collection('items').doc(id), { ...goal, uid, updatedAt: stamp }, { merge: true }));
                         writes.push(batch.commit());
                     }
+                    if (changes.notifications) {
+                        writes.push(db.collection('mentor_notifications').doc(uid).set({ uid, items: changes.notifications, updatedAt: stamp }, { merge: true }));
+                    }
+                    if (changes.reflections) {
+                        writes.push(db.collection('mentor_reflections').doc(uid).set({ uid, entries: changes.reflections, updatedAt: stamp }, { merge: true }));
+                    }
                     await Promise.all(writes);
                     setSyncStatus('All changes saved', '');
                 } catch (e) {
@@ -2875,7 +3184,14 @@
                         }, error => setSyncStatus(`Chat sync failed: ${error.code || 'permission denied'}`, 'error')),
 
                     firebaseFirestore.collection('mentor_settings').doc(uid).onSnapshot(snapshot => {
-                        if (snapshot.exists) applySettings(snapshot.data());
+                        if (snapshot.exists) {
+                            const settingsData = snapshot.data();
+                            applySettings(settingsData);
+                            notificationSettings = {
+                                studyReminders: settingsData.toggles?.[0] ?? true,
+                                goalAlerts: settingsData.toggles?.[1] ?? true
+                            };
+                        }
                         setSyncStatus('Firebase connected', '');
                     }, error => setSyncStatus(`Settings sync failed: ${error.code || 'permission denied'}`, 'error'))
                 ];
@@ -3256,6 +3572,533 @@
                         </div>
                     `;
                 }).join('');
+            }
+
+            function getNotificationIcon(type) {
+                switch (type) {
+                    case 'morning-study': return 'fa-sun';
+                    case 'goal-reminder': return 'fa-bullseye';
+                    case 'break-reminder': return 'fa-mug-hot';
+                    case 'evening-reflection': return 'fa-star';
+                    case 'goal-deadline': return 'fa-calendar-day';
+                    default: return 'fa-bell';
+                }
+            }
+
+            function getNotificationTitle(type) {
+                switch (type) {
+                    case 'morning-study': return 'Morning Study';
+                    case 'goal-reminder': return 'Goal Reminder';
+                    case 'break-reminder': return 'Break Reminder';
+                    case 'evening-reflection': return 'Evening Reflection';
+                    case 'goal-deadline': return 'Goal Deadline';
+                    default: return 'Neo Mentor Reminder';
+                }
+            }
+
+            function getNotificationBody(type, profileName) {
+                const name = profileName || 'student';
+                switch (type) {
+                    case 'morning-study': return `Start your day with a 20-minute focus block, ${name}.`;
+                    case 'goal-reminder': return 'Review your top goal and make one small step toward it today.';
+                    case 'break-reminder': return 'Take a short stretch and hydration break before you continue.';
+                    case 'evening-reflection': return 'Reflect on what you learned and note one win for tomorrow.';
+                    case 'goal-deadline': return 'One of your goals is nearing its deadline. Check your progress now.';
+                    default: return 'A new reminder is ready for you.';
+                }
+            }
+
+            function renderNotifications() {
+                const unreadCount = notificationHistory.filter(item => !item.read).length;
+                if (notificationBadge) {
+                    notificationBadge.textContent = unreadCount;
+                    notificationBadge.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+                }
+                if (notificationUnreadCount) {
+                    notificationUnreadCount.textContent = `${unreadCount} unread`;
+                }
+                if (notificationLastActivity && notificationHistory.length) {
+                    const latest = notificationHistory[0];
+                    notificationLastActivity.textContent = `${latest.title} · ${new Date(latest.createdAt || latest.time || Date.now()).toLocaleString()}`;
+                } else if (notificationLastActivity) {
+                    notificationLastActivity.textContent = 'No reminders yet';
+                }
+
+                if (!notificationHistoryList) return;
+                if (!notificationHistory.length) {
+                    notificationHistoryList.innerHTML = '<div class="notification-empty">No reminders yet. Enable alerts and let Neo Mentor guide your routine.</div>';
+                    return;
+                }
+
+                notificationHistoryList.innerHTML = notificationHistory.slice(0, 8).map(item => `
+                    <button class="notification-item ${item.read ? '' : 'unread'}" type="button" onclick="markNotificationRead('${item.id}')">
+                        <div class="notification-meta">
+                            <span><i class="fas ${getNotificationIcon(item.type)}"></i> ${escapeHtml(getNotificationTitle(item.type))}</span>
+                            <span>${new Date(item.createdAt || item.time || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <div class="notification-title">${escapeHtml(item.message || item.title || 'Reminder')}</div>
+                        <div class="notification-body">${escapeHtml(item.detail || item.body || '')}</div>
+                    </button>
+                `).join('');
+            }
+
+            function updateNotificationHint() {
+                if (!notificationPermissionHint) return;
+                if (!('Notification' in window)) {
+                    notificationPermissionHint.textContent = 'Browser notifications are not supported in this browser.';
+                    return;
+                }
+                const state = Notification.permission;
+                if (state === 'granted') {
+                    notificationPermissionHint.textContent = 'Browser alerts are enabled. Reminders will appear here and in your browser.';
+                } else if (state === 'denied') {
+                    notificationPermissionHint.textContent = 'Browser alerts are blocked. You can re-enable them in your browser settings.';
+                } else {
+                    notificationPermissionHint.textContent = 'Browser alerts are off. Enable them to receive study reminders.';
+                }
+            }
+
+            function initializeNotifications() {
+                updateNotificationHint();
+                renderNotifications();
+                if (notificationSchedulerTimer) clearInterval(notificationSchedulerTimer);
+                notificationSchedulerTimer = setInterval(() => {
+                    if (currentUser && notificationSettings.studyReminders !== false) {
+                        scheduleNextReminders();
+                    }
+                }, 60000);
+            }
+
+            function getReminderTemplates() {
+                const hour = new Date().getHours();
+                const currentName = profileData.name || 'student';
+                return [
+                    { type: 'morning-study', title: 'Morning Study', message: 'Morning Study Reminder', detail: getNotificationBody('morning-study', currentName), hour: 8, minute: 0, enabled: true },
+                    { type: 'goal-reminder', title: 'Goal Reminder', message: 'Goal Reminder', detail: getNotificationBody('goal-reminder', currentName), hour: 12, minute: 30, enabled: true },
+                    { type: 'break-reminder', title: 'Break Reminder', message: 'Break Reminder', detail: getNotificationBody('break-reminder', currentName), hour: 16, minute: 0, enabled: true },
+                    { type: 'evening-reflection', title: 'Evening Reflection', message: 'Evening Reflection', detail: getNotificationBody('evening-reflection', currentName), hour: 20, minute: 0, enabled: true },
+                    { type: 'goal-deadline', title: 'Goal Deadline', message: 'Goal Deadline', detail: getNotificationBody('goal-deadline', currentName), hour: 18, minute: 0, enabled: true }
+                ];
+            }
+
+            function scheduleNextReminders() {
+                const now = new Date();
+                const currentMinute = now.getMinutes();
+                const currentHour = now.getHours();
+                const currentKey = `${currentHour}:${currentMinute}`;
+                const templates = getReminderTemplates();
+
+                templates.forEach(template => {
+                    const reminderKey = `${template.hour}:${template.minute}`;
+                    if (!template.enabled || reminderKey !== currentKey) return;
+                    if (reminderState[template.type] === currentKey) return;
+                    reminderState[template.type] = currentKey;
+                    triggerNotification(template.type, template.title, template.message, template.detail);
+                });
+            }
+
+            function triggerNotification(type, title, message, detail) {
+                const item = {
+                    id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    type,
+                    title,
+                    message,
+                    detail,
+                    createdAt: Date.now(),
+                    read: false
+                };
+                notificationHistory.unshift(item);
+                notificationHistory = notificationHistory.slice(0, 20);
+                renderNotifications();
+                persistNotificationHistory();
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    try {
+                        new Notification(title, { body: detail, icon: '../favicon.ico' });
+                    } catch (e) {
+                        console.warn('Notification display failed', e);
+                    }
+                }
+            }
+
+            async function persistNotificationHistory() {
+                if (!ensureFirebase() || !currentUser) return;
+                try {
+                    await saveUserStateToFirebase({ notifications: notificationHistory.slice(0, 20) });
+                } catch (e) {
+                    console.warn('Could not save notifications', e);
+                }
+            }
+
+            async function loadNotificationsFromFirebase() {
+                if (!ensureFirebase() || !currentUser) return;
+                try {
+                    const snapshot = await firebaseFirestore.collection('mentor_notifications').doc(currentUser.uid).get();
+                    if (snapshot.exists && Array.isArray(snapshot.data()?.items)) {
+                        notificationHistory = snapshot.data().items.slice(0, 20);
+                    }
+                    renderNotifications();
+                } catch (e) {
+                    console.warn('Could not load notifications', e);
+                }
+            }
+
+            function markNotificationRead(id) {
+                notificationHistory = notificationHistory.map(item => item.id === id ? { ...item, read: true } : item);
+                renderNotifications();
+                persistNotificationHistory();
+            }
+
+            function markAllNotificationsRead() {
+                notificationHistory = notificationHistory.map(item => ({ ...item, read: true }));
+                renderNotifications();
+                persistNotificationHistory();
+            }
+
+            async function requestNotificationPermission() {
+                if (!('Notification' in window)) {
+                    updateNotificationHint();
+                    return;
+                }
+                if (Notification.permission === 'granted') {
+                    triggerNotification('morning-study', 'Reminders ready', 'Alerts enabled', 'You will receive browser reminders for your study routine.');
+                    updateNotificationHint();
+                    return;
+                }
+                const permission = await Notification.requestPermission();
+                updateNotificationHint();
+                if (permission === 'granted') {
+                    triggerNotification('morning-study', 'Alerts enabled', 'Alerts enabled', 'Browser reminders are now active for your study routine.');
+                }
+            }
+
+            function getReflectionDateKey(date = new Date()) {
+                const d = new Date(date);
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            }
+
+            function normalizeReflectionEntry(entry) {
+                const createdAt = entry.createdAt || entry.savedAt || Date.now();
+                return {
+                    ...entry,
+                    id: entry.id || `reflection-${createdAt}`,
+                    date: entry.date || getReflectionDateKey(new Date(createdAt)),
+                    createdAt: typeof createdAt === 'number' ? createdAt : Date.now(),
+                    analysisReady: entry.analysisReady !== false,
+                    analysisSource: entry.analysisSource || 'daily-reflection'
+                };
+            }
+
+            function sortReflectionEntries(entries) {
+                return [...entries].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            }
+
+            function calculateReflectionStreak(entries) {
+                const seenDates = new Set(entries.map(entry => entry.date));
+                let streak = 0;
+                const cursor = new Date();
+                for (let offset = 0; offset < 365; offset += 1) {
+                    const day = new Date(cursor);
+                    day.setDate(cursor.getDate() - offset);
+                    const key = getReflectionDateKey(day);
+                    if (seenDates.has(key)) {
+                        streak += 1;
+                    } else if (offset === 0) {
+                        return 0;
+                    } else {
+                        break;
+                    }
+                }
+                return streak;
+            }
+
+            function renderReflectionSummary() {
+                if (!reflectionSummary || !reflectionHistory) return;
+
+                const todayEntry = reflectionEntries.find(entry => entry.date === getReflectionDateKey()) || null;
+                const streak = calculateReflectionStreak(reflectionEntries);
+                const recent = sortReflectionEntries(reflectionEntries).slice(0, 7);
+
+                if (todayEntry) {
+                    reflectionSummary.innerHTML = `
+                        <div class="reflection-summary-card">
+                            <div style="font-weight:600; margin-bottom:0.35rem;">Today's reflection</div>
+                            <div style="color:var(--text-secondary); font-size:0.92rem;">${escapeHtml(todayEntry.studySummary || 'Reflection saved.')}</div>
+                            <div style="margin-top:0.45rem; display:flex; flex-wrap:wrap; gap:0.45rem;">
+                                <span class="reflection-pill"><i class="fas fa-clock"></i> ${escapeHtml(todayEntry.hoursStudied || '0')} hrs</span>
+                                <span class="reflection-pill"><i class="fas fa-smile"></i> ${escapeHtml(todayEntry.mood || 'Focused')}</span>
+                                <span class="reflection-pill"><i class="fas fa-trophy"></i> ${escapeHtml(todayEntry.achievement || 'Achievement noted')}</span>
+                            </div>
+                        </div>
+                        <div class="reflection-summary-card">
+                            <div style="font-weight:600; margin-bottom:0.2rem;">Progress snapshot</div>
+                            <div style="color:var(--text-secondary); font-size:0.9rem;">Last 7 reflections: ${recent.length} • Completion streak: ${streak} day${streak === 1 ? '' : 's'}</div>
+                        </div>
+                    `;
+                } else {
+                    reflectionSummary.innerHTML = `
+                        <div class="reflection-summary-card">
+                            <div style="font-weight:600; margin-bottom:0.2rem;">Today's reflection</div>
+                            <div style="color:var(--text-secondary); font-size:0.92rem;">No reflection recorded today yet. Capture your study notes and build your streak.</div>
+                        </div>
+                    `;
+                }
+
+                if (!recent.length) {
+                    reflectionHistory.innerHTML = '<div class="reflection-history-item">No reflections yet. Start with today’s entry to build a history.</div>';
+                    return;
+                }
+
+                reflectionHistory.innerHTML = recent.map(entry => `
+                    <div class="reflection-history-item">
+                        <div style="display:flex; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.3rem;">
+                            <strong>${escapeHtml(entry.date || 'Reflection')}</strong>
+                            <span style="color:var(--text-muted); font-size:0.78rem;">${new Date(entry.createdAt || Date.now()).toLocaleDateString()}</span>
+                        </div>
+                        <div style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:0.35rem;">${escapeHtml(entry.studySummary || 'Reflection saved')}</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:0.45rem;">
+                            <span class="reflection-pill"><i class="fas fa-clock"></i> ${escapeHtml(entry.hoursStudied || '0')} hrs</span>
+                            <span class="reflection-pill"><i class="fas fa-heart"></i> ${escapeHtml(entry.mood || 'Focused')}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async function initializeReflectionModule() {
+                renderReflectionSummary();
+                await loadReflectionsFromFirebase();
+            }
+
+            async function loadReflectionsFromFirebase() {
+                if (!ensureFirebase() || !currentUser) return;
+                try {
+                    const snapshot = await firebaseFirestore.collection('mentor_reflections').doc(currentUser.uid).get();
+                    if (snapshot.exists && Array.isArray(snapshot.data()?.entries)) {
+                        reflectionEntries = snapshot.data().entries.map(normalizeReflectionEntry);
+                    } else if (snapshot.exists && snapshot.data()) {
+                        reflectionEntries = [normalizeReflectionEntry(snapshot.data())];
+                    } else {
+                        reflectionEntries = [];
+                    }
+                    reflectionEntries = sortReflectionEntries(reflectionEntries);
+                    renderReflectionSummary();
+                } catch (e) {
+                    console.warn('Could not load reflections from Firestore', e);
+                }
+            }
+
+            async function persistReflectionsToFirebase() {
+                if (!ensureFirebase() || !currentUser) return;
+                try {
+                    const normalized = sortReflectionEntries(reflectionEntries).slice(0, 30).map(normalizeReflectionEntry);
+                    await saveUserStateToFirebase({ reflections: normalized });
+                    renderReflectionSummary();
+                } catch (e) {
+                    console.warn('Could not save reflections to Firestore', e);
+                    if (reflectionMessage) reflectionMessage.textContent = 'Reflection could not be saved to Firebase right now.';
+                }
+            }
+
+            function clearReflectionForm() {
+                if (!reflectionForm) return;
+                reflectionForm.reset();
+                const moodSelect = document.getElementById('reflectionMood');
+                if (moodSelect) moodSelect.value = 'Focused';
+                if (reflectionMessage) reflectionMessage.textContent = 'Reflection cleared. You can enter a new one anytime.';
+            }
+
+            async function handleReflectionSubmit(event) {
+                event.preventDefault();
+                if (!reflectionForm) return;
+
+                const studySummary = document.getElementById('reflectionStudySummary').value.trim();
+                const hoursStudied = document.getElementById('reflectionHours').value.trim();
+                if (!studySummary || !hoursStudied) {
+                    if (reflectionMessage) reflectionMessage.textContent = 'Please add a short study summary and hours studied.';
+                    return;
+                }
+
+                const todayKey = getReflectionDateKey();
+                const payload = {
+                    id: `reflection-${Date.now()}`,
+                    date: todayKey,
+                    studySummary,
+                    hoursStudied,
+                    mood: document.getElementById('reflectionMood').value || 'Focused',
+                    achievement: document.getElementById('reflectionAchievement').value.trim(),
+                    distraction: document.getElementById('reflectionDistraction').value.trim(),
+                    priority: document.getElementById('reflectionPriority').value.trim(),
+                    createdAt: Date.now(),
+                    analysisReady: true,
+                    analysisSource: 'daily-reflection'
+                };
+
+                const existingIndex = reflectionEntries.findIndex(entry => entry.date === todayKey);
+                if (existingIndex >= 0) {
+                    reflectionEntries[existingIndex] = payload;
+                } else {
+                    reflectionEntries.unshift(payload);
+                }
+
+                reflectionEntries = sortReflectionEntries(reflectionEntries).slice(0, 30);
+                renderReflectionSummary();
+                if (reflectionMessage) reflectionMessage.textContent = 'Reflection saved and synced to Firebase.';
+                await persistReflectionsToFirebase();
+                clearReflectionForm();
+            }
+
+            function createSparklineSvg(container, values, color, maxValue = 100) {
+                if (!container) return;
+                const width = 320;
+                const height = 180;
+                const padding = 20;
+                const safeValues = values.length ? values : [0];
+                const max = Math.max(maxValue, ...safeValues, 1);
+                const min = 0;
+                const points = safeValues.map((value, index) => {
+                    const x = padding + (index / Math.max(1, safeValues.length - 1)) * (width - padding * 2);
+                    const y = height - padding - ((value - min) / (max - min || 1)) * (height - padding * 2);
+                    return `${x},${y}`;
+                }).join(' ');
+                const polylinePoints = points;
+                container.innerHTML = `
+                    <rect x="0" y="0" width="${width}" height="${height}" rx="12" fill="rgba(255,255,255,0.03)"></rect>
+                    <polyline fill="none" stroke="${color}" stroke-width="3" points="${polylinePoints}" />
+                    <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="rgba(255,255,255,0.12)" />
+                    <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="rgba(255,255,255,0.12)" />
+                `;
+            }
+
+            function createDonutSvg(container, values, labels) {
+                if (!container) return;
+                const width = 320;
+                const height = 180;
+                const radius = 56;
+                const center = { x: width / 2, y: height / 2 + 10 };
+                const total = values.reduce((sum, value) => sum + value, 0) || 1;
+                let startAngle = -90;
+                const colors = ['#4d8fff', '#b06fff', '#2ecc71', '#f39c12', '#ff7f7f'];
+                let segments = '';
+                values.forEach((value, index) => {
+                    const slice = (value / total) * 360;
+                    const endAngle = startAngle + slice;
+                    const largeArc = slice > 180 ? 1 : 0;
+                    const start = {
+                        x: center.x + Math.cos(startAngle * Math.PI / 180) * radius,
+                        y: center.y + Math.sin(startAngle * Math.PI / 180) * radius
+                    };
+                    const end = {
+                        x: center.x + Math.cos(endAngle * Math.PI / 180) * radius,
+                        y: center.y + Math.sin(endAngle * Math.PI / 180) * radius
+                    };
+                    segments += `<path d="M ${center.x} ${center.y} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 1 ${end.x} ${end.y} Z" fill="${colors[index % colors.length]}" opacity="0.9"></path>`;
+                    startAngle = endAngle;
+                });
+                container.innerHTML = `
+                    <rect x="0" y="0" width="${width}" height="${height}" rx="12" fill="rgba(255,255,255,0.03)"></rect>
+                    ${segments}
+                    <circle cx="${center.x}" cy="${center.y}" r="28" fill="rgba(8,10,18,0.8)"></circle>
+                    <text x="${center.x}" y="${center.y - 5}" text-anchor="middle" fill="#fff" font-size="16">${values.reduce((sum, value) => sum + value, 0)}%</text>
+                    <text x="${center.x}" y="${center.y + 18}" text-anchor="middle" fill="#b5c0d4" font-size="11">Focus mix</text>
+                `;
+            }
+
+            function buildAnalyticsSummary() {
+                const total = reflectionEntries.length;
+                const averageHours = total ? (reflectionEntries.reduce((sum, entry) => sum + Number(entry.hoursStudied || 0), 0) / total).toFixed(1) : '0.0';
+                const completionRate = total ? Math.round((reflectionEntries.filter(entry => Number(entry.hoursStudied || 0) > 0).length / total) * 100) : 0;
+                const bestDay = analyticsData.daily.slice().sort((a, b) => b.value - a.value)[0];
+                const worstDay = analyticsData.daily.slice().sort((a, b) => a.value - b.value)[0];
+                const streak = calculateReflectionStreak(reflectionEntries);
+                const items = [
+                    { label: 'Average completion', value: `${averageHours} hrs` },
+                    { label: 'Goal completion rate', value: `${completionRate}%` },
+                    { label: 'Study streak', value: `${streak} day${streak === 1 ? '' : 's'}` },
+                    { label: 'Best study day', value: bestDay ? bestDay.label : '—' },
+                    { label: 'Worst study day', value: worstDay ? worstDay.label : '—' }
+                ];
+                analyticsSummary.innerHTML = items.map(item => `
+                    <div class="analytics-card">
+                        <div class="analytics-metric"><span>${item.label}</span><span class="value">${item.value}</span></div>
+                    </div>
+                `).join('');
+            }
+
+            function renderAnalytics() {
+                if (!analyticsSummary) return;
+                const dailyPoints = analyticsData.daily.map(item => item.value);
+                const weeklyPoints = analyticsData.weekly.map(item => item.value);
+                const monthlyPoints = analyticsData.monthly.map(item => item.value);
+                const subjectPoints = analyticsData.subjects.map(item => item.value);
+                const subjectLabels = analyticsData.subjects.map(item => item.label);
+                createSparklineSvg(dailyChart, dailyPoints, '#4d8fff', 100);
+                createSparklineSvg(weeklyChart, weeklyPoints, '#b06fff', 100);
+                createSparklineSvg(monthlyChart, monthlyPoints, '#2ecc71', 100);
+                createDonutSvg(subjectChart, subjectPoints, subjectLabels);
+                if (heatmap) {
+                    const cells = Array.from({ length: 14 }, (_, index) => ({ active: analyticsData.heatmap[index] && analyticsData.heatmap[index] > 0 }));
+                    heatmap.innerHTML = cells.map(cell => `<div class="day-cell ${cell.active ? 'active' : ''}"></div>`).join('');
+                }
+                if (insightList) {
+                    const insights = [
+                        `Best study day: ${analyticsData.daily.slice().sort((a, b) => b.value - a.value)[0]?.label || '—'}`,
+                        `Worst study day: ${analyticsData.daily.slice().sort((a, b) => a.value - b.value)[0]?.label || '—'}`,
+                        `Average completion: ${analyticsData.monthly.reduce((sum, item) => sum + item.value, 0) / Math.max(1, analyticsData.monthly.length)}%`
+                    ];
+                    insightList.innerHTML = insights.map(item => `<div class="reflection-summary-card"><div style="font-weight:600; margin-bottom:0.2rem;">Insight</div><div style="color:var(--text-secondary); font-size:0.9rem;">${escapeHtml(item)}</div></div>`).join('');
+                }
+                buildAnalyticsSummary();
+            }
+
+            function buildAnalyticsData() {
+                const today = new Date();
+                const recent = sortReflectionEntries(reflectionEntries).slice(0, 14);
+                const last7Days = Array.from({ length: 7 }, (_, idx) => {
+                    const date = new Date();
+                    date.setDate(today.getDate() - (6 - idx));
+                    const label = date.toLocaleDateString([], { weekday: 'short' });
+                    const dateKey = getReflectionDateKey(date);
+                    const entry = reflectionEntries.find(item => item.date === dateKey);
+                    const value = entry ? Math.min(100, Math.round((Number(entry.hoursStudied || 0) / 8) * 100)) : 0;
+                    return { label, value };
+                });
+                const last4Weeks = Array.from({ length: 4 }, (_, idx) => {
+                    const date = new Date();
+                    date.setDate(today.getDate() - (27 - idx * 7));
+                    const label = `W${4 - idx}`;
+                    const weekEntries = reflectionEntries.filter(entry => {
+                        const entryDate = new Date(entry.createdAt || Date.now());
+                        return entryDate >= date && entryDate <= today;
+                    });
+                    const value = weekEntries.length ? Math.round(weekEntries.reduce((sum, entry) => sum + Number(entry.hoursStudied || 0), 0) / weekEntries.length * 12.5) : 0;
+                    return { label, value };
+                });
+                const last6Months = Array.from({ length: 6 }, (_, idx) => {
+                    const label = new Date(today.getFullYear(), today.getMonth() - (5 - idx), 1).toLocaleDateString([], { month: 'short' });
+                    const monthEntries = reflectionEntries.filter(entry => {
+                        const entryDate = new Date(entry.createdAt || Date.now());
+                        return entryDate.getMonth() === (today.getMonth() - (5 - idx) + 12) % 12 && entryDate.getFullYear() === today.getFullYear();
+                    });
+                    const value = monthEntries.length ? Math.round(monthEntries.reduce((sum, entry) => sum + Number(entry.hoursStudied || 0), 0) / monthEntries.length * 10) : 0;
+                    return { label, value };
+                });
+                const subjectMap = {};
+                recent.forEach(entry => {
+                    const subject = entry.priority || 'General';
+                    subjectMap[subject] = (subjectMap[subject] || 0) + 1;
+                });
+                analyticsData = {
+                    daily: last7Days,
+                    weekly: last4Weeks,
+                    monthly: last6Months,
+                    subjects: Object.entries(subjectMap).slice(0, 5).map(([label, value]) => ({ label, value: Math.min(100, Math.round(value * 20)) })),
+                    heatmap: Array.from({ length: 14 }, (_, idx) => idx < recent.length ? 1 : 0)
+                };
+                renderAnalytics();
+            }
+
+            async function loadAnalyticsData() {
+                await loadReflectionsFromFirebase();
+                buildAnalyticsData();
             }
 
             function renderGoals() {
@@ -3730,6 +4573,10 @@
                     toggles: Array.from(document.querySelectorAll('.settings-item .toggle-switch')).map(el => el
                         .classList.contains('active'))
                 };
+                notificationSettings = {
+                    studyReminders: settings.toggles?.[0] ?? true,
+                    goalAlerts: settings.toggles?.[1] ?? true
+                };
                 saveUserStateToFirebase({ settings }).then(() => alert('✅ Settings saved to Firebase!'));
             }
 
@@ -3784,6 +4631,9 @@
                     profileEmailDisplay.textContent = user.email || 'student@example.com';
                     await loadProfileFromFirebase();
                     await loadGoalsFromFirebase();
+                    await loadNotificationsFromFirebase();
+                    await loadReflectionsFromFirebase();
+                    buildAnalyticsData();
                     profileCompleted = Boolean(profileData.name);
                     applyProfileToUI();
                     startRealtimeUserSync();
@@ -3838,6 +4688,12 @@
             window.changeMonth = changeMonth;
             window.openDayModal = openDayModal;
             window.closeDayModal = closeDayModal;
+            window.handleReflectionSubmit = handleReflectionSubmit;
+            window.clearReflectionForm = clearReflectionForm;
+            // Expose notification functions so inline handlers work
+            window.requestNotificationPermission = requestNotificationPermission;
+            window.markAllNotificationsRead = markAllNotificationsRead;
+            window.markNotificationRead = markNotificationRead;
 
             // ============================================================
             // KEYBOARD SHORTCUTS
@@ -3866,6 +4722,7 @@
 
             goalForm.addEventListener('submit', handleGoalSubmit);
             chatForm.addEventListener('submit', handleChatSubmit);
+            if (reflectionForm) reflectionForm.addEventListener('submit', handleReflectionSubmit);
 
             // ============================================================
             // INIT

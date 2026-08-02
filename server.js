@@ -278,6 +278,36 @@ app.post('/api/chat', verifyFirebaseIdToken, async (req, res) => {
   }
 });
 
+// POST /api/notify/whatsapp
+// Lightweight queue endpoint to prepare architecture for future WhatsApp integration.
+// Currently enqueues request to Firestore collection `whatsapp_queue` when Admin SDK is available.
+app.post('/api/notify/whatsapp', verifyFirebaseIdToken, async (req, res) => {
+  try {
+    const { phone, message, meta = {} } = req.body || {};
+    if (!phone || !message) return res.status(400).json({ error: 'phone and message are required' });
+
+    if (!admin) {
+      console.warn('[notify/whatsapp] Firebase Admin not initialized; cannot persist queue.');
+      return res.status(202).json({ success: true, queued: false, message: 'Received (admin unavailable). Persist when configured.' });
+    }
+
+    const db = admin.firestore();
+    await db.collection('whatsapp_queue').add({
+      phone: String(phone),
+      message: String(message),
+      meta,
+      uid: req.uid || null,
+      status: 'queued',
+      createdAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return res.json({ success: true, queued: true });
+  } catch (error) {
+    console.error('[notify/whatsapp] Error:', error.message || error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.get('/healthz', (req, res) => {
   res.json({ ok: true, message: 'Neo Mentor API is running' });
 });
